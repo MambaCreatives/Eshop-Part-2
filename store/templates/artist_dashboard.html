@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Artist Dashboard - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Welcome, {{ artist.first_name }}!</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'upload_artwork' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Upload New Artwork
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Artworks</h5>
+                </div>
+                <div class="card-body">
+                    {% if artworks %}
+                    <div class="row">
+                        {% for artwork in artworks %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <img src="{{ artwork.image.url }}" class="card-img-top" alt="{{ artwork.name }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ artwork.name }}</h5>
+                                    <p class="card-text text-muted">{{ artwork.get_category_display }}</p>
+                                    <p class="card-text">KSH {{ artwork.price }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted">You haven't uploaded any artworks yet.</p>
+                        <a href="{% url 'upload_artwork' %}" class="btn btn-primary">Upload Your First Artwork</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Shopping Cart</h4>
+                </div>
+                <div class="card-body">
+                    {% if cart_items %}
+                        {% for item in cart_items %}
+                        <div class="cart-item mb-4 pb-3 border-bottom">
+                            <div class="row align-items-center">
+                                <!-- Artwork Image -->
+                                <div class="col-md-3">
+                                    <img src="{{ item.artwork.image.url }}" 
+                                         alt="{{ item.artwork.name }}"
+                                         class="img-fluid rounded">
+                                </div>
+                                
+                                <!-- Artwork Details -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-1">{{ item.artwork.name }}</h5>
+                                    <p class="text-muted mb-1">
+                                        By {{ item.artwork.artist.first_name }} {{ item.artwork.artist.last_name }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <span class="badge category-badge {{ item.artwork.category }}">
+                                            {{ item.artwork.get_category_display }}
+                                        </span>
+                                    </p>
+                                    <p class="mb-0">KSH {{ item.artwork.price }}</p>
+                                </div>
+                                
+                                <!-- Quantity Controls -->
+                                <div class="col-md-3">
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <form method="post" class="d-inline-block">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="artwork_id" value="{{ item.artwork.id }}">
+                                            <div class="input-group">
+                                                <button type="submit" name="action" value="decrease" 
+                                                        class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                
+                                                <input type="text" class="form-control form-control-sm text-center" 
+                                                       value="{{ item.quantity }}" readonly style="width: 50px;">
+                                                
+                                                <button type="submit" name="action" value="increase" 
+                                                        class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                        
+                                        <!-- Remove Button -->
+                                        <form method="post" class="ms-2">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="artwork_id" value="{{ item.artwork.id }}">
+                                            <button type="submit" name="action" value="remove" 
+                                                    class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5>Your cart is empty</h5>
+                            <p class="text-muted">Explore our amazing collection of artworks!</p>
+                            <a href="{% url 'homepage' %}" class="btn btn-primary">
+                                Start Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>KSH {{ subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>KSH {{ shipping }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total</strong>
+                        <strong>KSH {{ total }}</strong>
+                    </div>
+
+                    {% if cart_items %}
+                        <a href="{% url 'checkout' %}" class="btn btn-primary w-100">
+                            Proceed to Checkout
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            <div class="text-center mt-3">
+                <a href="{% url 'homepage' %}" class="text-decoration-none">
+                    <i class="fas fa-arrow-left me-1"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide alerts after 3 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

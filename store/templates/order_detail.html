@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cart_tags %}
+
+{% block title %}Order #{{ order.id }} - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Order #{{ order.id }}</h4>
+                    <span class="badge {% if order.status == 'delivered' %}bg-success
+                                     {% elif order.status == 'cancelled' %}bg-danger
+                                     {% elif order.status == 'processing' %}bg-warning
+                                     {% elif order.status == 'shipped' %}bg-info
+                                     {% else %}bg-primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Artwork Image -->
+                        <div class="col-md-3">
+                            {% if order.artwork.image %}
+                                <img src="{{ order.artwork.image.url }}" 
+                                     alt="{{ order.artwork.name }}"
+                                     class="img-fluid rounded">
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Order Details -->
+                        <div class="col-md-6">
+                            <h5>{{ order.artwork.name }}</h5>
+                            <p class="mb-1">Category: {{ order.artwork.category.name }}</p>
+                            <p class="mb-3">{{ order.artwork.description }}</p>
+                            
+                            <h6>Order Information</h6>
+                            <p class="mb-1">Quantity: {{ order.quantity }}</p>
+                            <p class="mb-1">Price per item: KSH {{ order.price }}</p>
+                            <p class="mb-1">Total: KSH {{ order.price|multiply:order.quantity }}</p>
+                            <p class="mb-1">Delivery Address: {{ order.address }}</p>
+                            <p class="mb-1">Contact Phone: {{ order.phone }}</p>
+                            <p class="mb-0">Order Date: {{ order.date|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'orders' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

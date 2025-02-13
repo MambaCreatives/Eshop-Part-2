@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cart_tags %}
+
+{% block title %}My Orders - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">My Orders</h2>
+
+    {% if order %}<!-- In your artwork list or detail template -->
+<form method="POST" action="{% url 'store:cart' %}">
+    {% csrf_token %}
+    <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
+    <input type="hidden" name="action" value="add">
+    <button type="submit" class="btn btn-primary">
+        Add to Cart
+    </button>
+</form><!-- In your artwork list or detail template -->
+<form method="POST" action="{% url 'store:cart' %}">
+    {% csrf_token %}
+    <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
+    <input type="hidden" name="action" value="add">
+    <button type="submit" class="btn btn-primary">
+        Add to Cart
+    </button>
+</form>
+    <div class="row">
+        {% for order in orders%}
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span>Order #{{ order.id }}</span>
+                    <span class="badge {% if order.status == 'delivered' %}bg-success
+                                     {% elif order.status == 'cancelled' %}bg-danger
+                                     {% elif order.status == 'processing' %}bg-warning
+                                     {% elif order.status == 'shipped' %}bg-info
+                                     {% else %}bg-primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- Artwork Image -->
+                        <div class="col-md-2">
+                            {% if order.artwork.image %}
+                                <img src="{{ order.artwork.image.url }}" 
+                                     alt="{{ order.artwork.name }}"
+                                     class="img-fluid rounded">
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Order Details -->
+                        <div class="col-md-7">
+                            <h5 class="mb-1">{{ order.artwork.name }}</h5>
+                            <p class="mb-1">Category: {{ order.artwork.category.name }}</p>
+                            <p class="mb-1">Quantity: {{ order.quantity }}</p>
+                            <p class="mb-0">Price per item: KSH {{ order.price }}</p>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="col-md-3 text-end">
+                            <p class="mb-1">
+                                <strong>Total: KSH {{ order.price|multiply:order.quantity }}</strong>
+                            </p>
+                            <p class="mb-1">
+                                <small class="text-muted">
+                                    Ordered on {{ order.date|date:"F j, Y" }}
+                                </small>
+                            </p>
+                            <p class="mb-2">
+                                <small class="text-muted">
+                                    Delivery to: {{ order.address }}
+                                </small>
+                            </p>
+                            <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <h4>No orders yet</h4>
+        <p class="text-muted">Start shopping to see your orders here!</p>
+        <a href="{% url 'homepage' %}" class="btn btn-primary">
+            Browse Artworks
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5em 1em;
+    }
+    .category-badge {
+        font-size: 0.75rem;
+    }
+    .card-header {
+        border-bottom: none;
+        background-color: #f8f9fa;
+    }
+    .order-status {
+        width: 100px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+{% endblock %}

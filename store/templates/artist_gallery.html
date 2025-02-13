@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ artist.first_name }}'s Gallery - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Artist Profile -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            {% if artist.profile_image %}
+                <img src="{{ artist.profile_image.url }}" alt="{{ artist.first_name }}" 
+                     class="img-fluid rounded-circle mb-3">
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <h2>{{ artist.first_name }} {{ artist.last_name }}</h2>
+            {% if artist.bio %}
+                <p class="lead">{{ artist.bio }}</p>
+            {% endif %}
+            {% if artist.artist_statement %}
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">Artist Statement</h5>
+                        <p class="card-text">{{ artist.artist_statement }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Artwork Filter -->
+    <div class="mb-4">
+        <div class="btn-group" role="group" aria-label="Artwork categories">
+            <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="pencil">Pencil Drawings</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="painting">Paintings</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="thread">Thread Art</button>
+        </div>
+    </div>
+
+    <!-- Artwork Grid -->
+    <h3 class="mb-4">Artworks</h3>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for artwork in artworks %}
+        <div class="col artwork-item" data-category="{{ artwork.category }}">
+            <div class="card h-100">
+                <img src="{{ artwork.image.url }}" class="card-img-top" alt="{{ artwork.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ artwork.name }}</h5>
+                    <p class="card-text">{{ artwork.description }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Category: {{ artwork.get_category_display }}
+                            {% if artwork.ml_category %}
+                            <br>AI Verified as: {{ artwork.ml_category }}
+                            {% endif %}
+                        </small>
+                    </p>
+                    <p class="card-text"><strong>Price: KSH {{ artwork.price }}</strong></p>
+                    
+                    <form method="post" action="{% url 'homepage' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="product" value="{{ artwork.id }}">
+                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                    </form>
+                </div>
+                <div class="card-footer text-muted">
+                    Posted on {{ artwork.created_at|date:"F j, Y" }}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p>No artworks available yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const artworkItems = document.querySelectorAll('.artwork-item');
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter artworks
+            artworkItems.forEach(item => {
+                if (filter === 'all' || item.dataset.category === filter) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

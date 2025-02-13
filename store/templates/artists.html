@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Artists - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center mb-4">Our Artists</h2>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for artist in artists %}
+        <div class="col">
+            <div class="card h-100">
+                {% if artist.profile_image %}
+                    <img src="{{ artist.profile_image.url }}" class="card-img-top artist-profile" 
+                         alt="{{ artist.first_name }}">
+                {% else %}
+                    <div class="card-img-top artist-profile-placeholder">
+                        <i class="fas fa-user fa-3x"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ artist.first_name }} {{ artist.last_name }}</h5>
+                    {% if artist.bio %}
+                        <p class="card-text">{{ artist.bio|truncatewords:30 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'artist_gallery' artist.id %}" class="btn btn-primary w-100">
+                        View Gallery
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p>No artists found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h2 class="card-title text-center mb-4">Create Account</h2>
+
+    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- User Type Selection -->
+                            <div class="col-12 mb-3">
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="user_type" id="buyer" value="customer" checked>
+                                    <label class="btn btn-outline-primary" for="buyer">Art Buyer</label>
+
+                                    <input type="radio" class="btn-check" name="user_type" id="artist" value="artist">
+                                    <label class="btn btn-outline-primary" for="artist">Artist</label>
+                                </div>
+                            </div>
+
+                            <!-- Basic Info -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="firstname" name="firstname" 
+                                           value="{{ values.first_name }}" required>
+                                    <label for="firstname">First Name</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="lastname" name="lastname" 
+                                           value="{{ values.last_name }}" required>
+                                    <label for="lastname">Last Name</label>
+                                </div>
+                            </div>
+
+                            <!-- Contact Info -->
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ values.email }}" required>
+                                    <label for="email">Email address</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ values.phone }}" required>
+                                    <label for="phone">Phone Number</label>
+                                </div>
+                            </div>
+
+                            <!-- Artist Fields (initially hidden) -->
+                            <div class="artist-fields" style="display: none;">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="bio" name="bio" 
+                                                  style="height: 100px">{{ values.bio }}</textarea>
+                                        <label for="bio">Artist Bio</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="artist_statement" name="artist_statement" 
+                                                  style="height: 100px">{{ values.artist_statement }}</textarea>
+                                        <label for="artist_statement">Artist Statement</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="profile_image" class="form-label">Profile Image</label>
+                                    <input type="file" class="form-control" id="profile_image" 
+                                           name="profile_image" accept="image/*">
+                                </div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <label for="password">Password</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the Terms of Service and Privacy Policy
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                            </div>
+                        </div>
+                    </form>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const artistFields = document.querySelector('.artist-fields');
+    const userTypeInputs = document.querySelectorAll('input[name="user_type"]');
+
+    userTypeInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'artist') {
+                artistFields.style.display = 'block';
+            } else {
+                artistFields.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %}
