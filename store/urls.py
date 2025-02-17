@@ -4,7 +4,6 @@ from django.urls import path
 from .views import Index, store
 from .views import Signup
 from .views import Login, logout
-from .views import Cart
 from .views import CheckOut
 from .views import OrderView
 from store.middlewares.auth_middleware import auth_middleware

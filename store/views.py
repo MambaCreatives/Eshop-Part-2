@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password,make_password
 import datetime
 from django.contrib import messages
 from django.utils.decorators import method_decorator
-from .utils import predict_category
+#from .utils import predict_category
 
 # Importing models
 
@@ -152,70 +152,6 @@ class Signup(View):
 
         
     
-class Cart(View):
-    def get(self, request):
-        if not request.session.get('customer'):
-            messages.warning(request, 'Please login to view your cart')
-            return redirect('login')
-            
-        cart = request.session.get('cart', {})
-        cart_items = []
-        subtotal = 0
-        
-        if cart:
-            for artwork_id, quantity in cart.items():
-                try:
-                    artwork = Artwork.objects.get(id=str(artwork_id))
-                    item_total = float(artwork.price) * int(quantity)
-                    subtotal += item_total
-                    cart_items.append({
-                        'artwork': artwork,
-                        'quantity': quantity,
-                        'total': item_total
-                    })
-                except Artwork.DoesNotExist:
-                    cart.pop(str(artwork_id), None)
-                    request.session['cart'] = cart
-        
-        shipping = 200  # Fixed shipping cost
-        total = subtotal + shipping
-        
-        return render(request, 'cart.html', {
-            'cart_items': cart_items,
-            'subtotal': subtotal,
-            'shipping': shipping,
-            'total': total
-        })
-
-    def post(self, request):
-        if not request.session.get('customer'):
-            messages.warning(request, 'Please login to add items to cart')
-            return redirect('login')
-            
-        action = request.POST.get('action')
-        artwork_id = str(request.POST.get('artwork_id'))
-        cart = request.session.get('cart', {})
-        
-        if artwork_id:
-            try:
-                artwork = Artwork.objects.get(id=artwork_id)
-                if action == 'increase' or action == 'add':
-                    cart[artwork_id] = cart.get(artwork_id, 0) + 1
-                elif action == 'decrease':
-                    if cart.get(artwork_id, 0) > 1:
-                        cart[artwork_id] = cart[artwork_id] - 1
-                    else:
-                        cart.pop(artwork_id, None)
-                elif action == 'remove':
-                    cart.pop(artwork_id, None)
-                
-                request.session['cart'] = cart
-                request.session.modified = True
-                messages.success(request, 'Cart updated successfully')
-            except Artwork.DoesNotExist:
-                messages.error(request, 'Artwork not found')
-                
-        return redirect('cart')
 
 
 class CheckOut(View): 
@@ -489,28 +425,31 @@ class CartView(View):
             return redirect('login')
             
         action = request.POST.get('action')
-        artwork_id = str(request.POST.get('artwork_id'))
+        artwork_id = request.POST.get('artwork_id')  # Get artwork_id from POST data
         cart = request.session.get('cart', {})
         
-        if artwork_id:
-            try:
-                artwork = Artwork.objects.get(id=artwork_id)
-                if action == 'increase':
-                    cart[artwork_id] = cart.get(artwork_id, 0) + 1
-                elif action == 'decrease':
-                    if cart.get(artwork_id, 0) > 1:
-                        cart[artwork_id] = cart[artwork_id] - 1
-                    else:
-                        cart.pop(artwork_id, None)
-                elif action == 'remove':
+      
+        artwork_id = str(artwork_id)  # Ensure artwork_id is a string for session
+        
+        try:
+            artwork = Artwork.objects.get(id=(artwork_id)) # This will raise an error if not found
+            if action == 'increase':
+                cart[artwork_id] = cart.get(artwork_id, 0) + 1
+            elif action == 'decrease':
+                if cart.get(artwork_id, 0) > 1:
+                    cart[artwork_id] -= 1
+                else:
                     cart.pop(artwork_id, None)
-                
-                request.session['cart'] = cart
-                messages.success(request, 'Cart updated successfully')
-            except Artwork.DoesNotExist:
-                messages.error(request, 'Artwork not found')
-                
+            elif action == 'remove':
+                cart.pop(artwork_id, None)
+            
+            request.session['cart'] = cart
+            messages.success(request, 'Cart updated successfully')
+        except Artwork.DoesNotExist:
+            messages.error(request, 'Artwork not found')
+        
         return redirect('cart')
+
 class store(View):
             def get(self, request):
                 cart = request.session.get('cart', {})  
@@ -528,30 +467,7 @@ class store(View):
                     'cart': cart
                 })
 
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import Artwork
-from .utils import predict_category
 
-class UploadArtworkView(View):
-    def get(self, request):
-        return render(request, 'upload_artwork.html')
-
-    def post(self, request):
-        image = request.FILES.get('image')
-        if image:
-            # Predict the category of the uploaded artwork
-            category = predict_category(image)
-            # Save the artwork with the predicted category
-            artwork = Artwork(
-                name=request.POST.get('name'),
-                description=request.POST.get('description'),
-                image=image,
-                category=category
-            )
-            artwork.save()
-            return redirect('homepage')
-        return render(request, 'upload_artwork.html', {'error': 'Please upload an image'})
 
 
   

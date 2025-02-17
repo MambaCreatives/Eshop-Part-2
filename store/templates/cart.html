@@ -28,7 +28,7 @@
             <div class="col-3">
                 <form method="post" class="d-flex align-items-center">
                     {% csrf_token %}
-                    <input type="hidden" name="artwork_id" value="{{ cart_item.artwork.id }}">
+                    <input type="hidden" name="artwork_id" value="{{cart_item.artwork.id}}">
                     
                     <button type="submit" name="action" value="decrease" class="btn btn-outline-secondary btn-sm">-</button>
                     <span class="mx-2">{{ cart_item.quantity }}</span>
@@ -37,7 +37,7 @@
             </div>
             <div class="col-2 text-end">
                 <p class="mb-1">KSH {{ cart_item.total }}</p>
-                <form method="post" class="d-inline">
+                <form method="post"  action="{% url 'cart' %}"class="d-inline">
                     {% csrf_token %}
                     <input type="hidden" name="artwork_id" value="{{ cart_item.artwork.id }}">
                     <button type="submit" name="action" value="remove" class="btn btn-link text-danger p-0">

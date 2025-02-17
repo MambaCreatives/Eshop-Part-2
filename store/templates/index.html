@@ -51,10 +51,10 @@
                             {% endwith %}
                         {% endif %}
                     </div>
-                    
-                    <form method="post" action="{% url 'homepage' %}">
+                  
+                    <form method="post" action="{% url 'cart' %}">
                         {% csrf_token %}
-                        <input type="hidden" name="artwork" value="{{ artwork.id }}">
+                        <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
                         <button type="submit" class="btn btn-primary w-100">
                             Add to Cart
                         </button>
