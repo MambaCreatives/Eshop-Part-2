@@ -391,20 +391,24 @@ class CartView(View):
             return redirect('login')
             
         cart = request.session.get('cart', {})
-        cart_items = []
+        print(f"Cart: {cart}")  # Debugging: Print cart contents
+        cart_items= []
         subtotal = 0
+        
+        
         
         if cart:
             for artwork_id, quantity in cart.items():
                 try:
-                    artwork = Artwork.objects.get(id=str(artwork_id))
-                    item_total = float(artwork.price) * int(quantity)
+                    artwork_obj = Artwork.objects.get(id=str(artwork_id))
+                    item_total = float(artwork_obj.price) * int(quantity)
                     subtotal += item_total
                     cart_items.append({
-                        'artwork': artwork,
+                        'artwork': artwork_obj,
                         'quantity': quantity,
                         'total': item_total
                     })
+                    print(f"Artwork added: {artwork_obj.name}, Image URL: {artwork_obj.image.url}") 
                 except Artwork.DoesNotExist:
                     cart.pop(str(artwork_id), None)
                     request.session['cart'] = cart
@@ -412,6 +416,7 @@ class CartView(View):
         shipping = 200  # Fixed shipping cost
         total = subtotal + shipping
         
+       
         return render(request, 'cart.html', {
             'cart_items': cart_items,
             'subtotal': subtotal,
@@ -426,8 +431,13 @@ class CartView(View):
             
         action = request.POST.get('action')
         artwork_id = request.POST.get('artwork_id')  # Get artwork_id from POST data
+        
+        if 'cart' not in request.session:
+          request.session['cart'] = {}
+
         cart = request.session.get('cart', {})
         
+        print(f"Cart before update: {cart}")
       
         artwork_id = str(artwork_id)  # Ensure artwork_id is a string for session
         
@@ -439,11 +449,15 @@ class CartView(View):
                 if cart.get(artwork_id, 0) > 1:
                     cart[artwork_id] -= 1
                 else:
-                    cart.pop(artwork_id, None)
+                    cart.pop(artwork_id,None)
             elif action == 'remove':
-                cart.pop(artwork_id, None)
+                cart.pop(artwork_id,None)
             
             request.session['cart'] = cart
+            request.session.modified = True
+            request.session.save()
+            
+            print(f"Cart after update: {request.session['cart']}")
             messages.success(request, 'Cart updated successfully')
         except Artwork.DoesNotExist:
             messages.error(request, 'Artwork not found')
