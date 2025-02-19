@@ -7,7 +7,7 @@ import datetime
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 #from .utils import predict_category
-
+from django.contrib.auth.models import User
 # Importing models
 
 from .models import Category
@@ -154,66 +154,97 @@ class Signup(View):
     
 
 
-class CheckOut(View): 
+class CheckOut(View):
     @method_decorator(auth_middleware)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
-        
+
     def get(self, request):
-        if not request.session.get('cart'):
-            messages.warning(request, 'Your cart is empty')
-            return redirect('cart')
-            
-        return render(request, 'checkout.html')
-        
-    def post(self, request): 
-        if not request.session.get('customer'):
+        """Ensure the cart is not empty before checkout"""
+        customer_id = request.session.get('customer')
+        if not customer_id:
+           return redirect('login')
+
+    # ✅ Fetch cart items from the database
+        cart_items = Cart.objects.filter(customer_id=customer_id, status=False)
+        subtotal = sum(item.artwork.price * item.quantity for item in cart_items)
+        shipping = 200  # Fixed shipping cost
+        total = subtotal + shipping
+
+         # ✅ Debugging: Print cart items before rendering
+        print("DEBUG: Cart items being sent to checkout page:", cart_items)
+
+        if not cart_items.exists():
+           messages.warning(request, 'Your cart is empty')
+           return redirect('cart')
+
+        return render(request, 'checkout.html', {
+           'cart_items': cart_items,
+           'subtotal': subtotal,
+           'shipping': shipping,
+           'total': total
+    })
+
+
+    def post(self, request):
+        """Process checkout and create orders from the cart"""
+        customer_id = request.session.get('customer')
+        if not customer_id:
             return redirect('login')
-            
-        cart = request.session.get('cart', {})
-        if not cart:
+
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            messages.error(request, 'Customer not found')
+            return redirect('checkout')
+
+        cart_items = Cart.objects.filter(customer=customer, status=False)  # Fetch cart items
+
+        if not cart_items.exists():
             messages.error(request, 'Your cart is empty')
             return redirect('cart')
-            
-        address = request.POST.get('address') 
-        phone = request.POST.get('phone') 
-        
+
+        address = request.POST.get('address')
+        phone = request.POST.get('phone')
+
         if not address or not phone:
             messages.error(request, 'Address and phone are required')
             return redirect('checkout')
-            
-        customer = Customer.objects.get(id=request.session.get('customer'))
+
         orders_created = []
-        
-        for artwork_id, quantity in cart.items():
+
+        for cart_item in cart_items:
             try:
-                artwork = Artwork.objects.get(id=artwork_id)
-                order = Order(
+                artwork = Artwork.objects.get(id=cart_item.artwork.id)
+                order = Order.objects.create(
                     customer=customer,
                     artwork=artwork,
                     price=artwork.price,
-                    quantity=quantity,
-                          address=address, 
-                          phone=phone, 
-                    status='pending'
+                    quantity=cart_item.quantity,
+                    address=address,
+                    phone=phone,
+                    status='pending'  # Default status
                 )
-                order.place_order()
                 orders_created.append(order)
+                print(f"✅ SUCCESS: Order created -> Order ID: {order.id}")
             except Artwork.DoesNotExist:
-                continue
-        
-        if orders_created:
-            # Clear the cart after successful order placement
-            request.session['cart'] = {} 
-            messages.success(request, 'Orders placed successfully!')
-            return redirect('orders')
-            # If single order, redirect to its detail page
-            if len(orders_created) == 1:
-                return redirect('order_detail', order_id=orders_created[0].id)
-            else:
+                messages.error(request, f'Artwork with ID {cart_item.artwork.id} not found')
+                return redirect('checkout')
+            
+        # ✅ Clear cart after order placement
+        cart_items.delete()
+
+        messages.success(request, 'Orders placed successfully!')
+
+        # ✅ Redirect to order details if only one order
+        if len(orders_created) == 1:
+            return redirect('order_detail', order_id=orders_created[0].id)
+        else:
                 messages.error(request, 'Error placing orders')
             
         return redirect('orders')
+
+
 
 class OrderView(View): 
     @method_decorator(auth_middleware)
@@ -386,37 +417,17 @@ class ArtistGallery(View):
   
 class CartView(View):
     def get(self, request):
+        """Retrieve the cart for the logged-in customer and display items"""
         if not request.session.get('customer'):
             messages.warning(request, 'Please login to view your cart')
             return redirect('login')
-            
-        cart = request.session.get('cart', {})
-        print(f"Cart: {cart}")  # Debugging: Print cart contents
-        cart_items= []
-        subtotal = 0
-        
-        
-        
-        if cart:
-            for artwork_id, quantity in cart.items():
-                try:
-                    artwork_obj = Artwork.objects.get(id=str(artwork_id))
-                    item_total = float(artwork_obj.price) * int(quantity)
-                    subtotal += item_total
-                    cart_items.append({
-                        'artwork': artwork_obj,
-                        'quantity': quantity,
-                        'total': item_total
-                    })
-                    print(f"Artwork added: {artwork_obj.name}, Image URL: {artwork_obj.image.url}") 
-                except Artwork.DoesNotExist:
-                    cart.pop(str(artwork_id), None)
-                    request.session['cart'] = cart
-        
+
+        customer_id = request.session.get('customer')
+        cart_items = Cart.objects.filter(customer_id=customer_id, status=False)  # Get unprocessed cart items
+        subtotal = sum(item.artwork.price * item.quantity for item in cart_items)
         shipping = 200  # Fixed shipping cost
         total = subtotal + shipping
-        
-       
+
         return render(request, 'cart.html', {
             'cart_items': cart_items,
             'subtotal': subtotal,
@@ -425,43 +436,51 @@ class CartView(View):
         })
 
     def post(self, request):
+        """Handle adding, updating, or removing items in the cart"""
         if not request.session.get('customer'):
             messages.warning(request, 'Please login to add items to cart')
             return redirect('login')
-            
-        action = request.POST.get('action')
-        artwork_id = request.POST.get('artwork_id')  # Get artwork_id from POST data
-        
-        if 'cart' not in request.session:
-          request.session['cart'] = {}
 
-        cart = request.session.get('cart', {})
-        
-        print(f"Cart before update: {cart}")
-      
-        artwork_id = str(artwork_id)  # Ensure artwork_id is a string for session
-        
+        action = request.POST.get('action')
+        artwork_id = request.POST.get('artwork_id')
+
+        if not artwork_id or not artwork_id.isdigit():
+            messages.error(request, 'Invalid artwork ID')
+            return redirect('cart')
+
+        customer_id = request.session.get('customer')
+
         try:
-            artwork = Artwork.objects.get(id=(artwork_id)) # This will raise an error if not found
+            artwork = Artwork.objects.get(id=artwork_id)
+            cart_item, created = Cart.objects.get_or_create(
+                customer_id=customer_id,
+                artwork=artwork,
+                status=False,  # Only modify active cart items
+                defaults={'quantity': 1, 'price': artwork.price, 'date': datetime.datetime.today()}
+            )
+
             if action == 'increase':
-                cart[artwork_id] = cart.get(artwork_id, 0) + 1
+                cart_item.quantity += 1
+                messages.success(request, 'Artwork quantity increased')
+
             elif action == 'decrease':
-                if cart.get(artwork_id, 0) > 1:
-                    cart[artwork_id] -= 1
+                if cart_item.quantity > 1:
+                    cart_item.quantity -= 1
+                    messages.success(request, 'Artwork quantity decreased')
                 else:
-                    cart.pop(artwork_id,None)
+                    cart_item.delete()
+                    messages.success(request, 'Artwork removed from cart')
+                    return redirect('cart')
+
             elif action == 'remove':
-                cart.pop(artwork_id,None)
-            
-            request.session['cart'] = cart
-            request.session.modified = True
-            request.session.save()
-            
-            print(f"Cart after update: {request.session['cart']}")
-            messages.success(request, 'Cart updated successfully')
+                cart_item.delete()
+                messages.success(request, 'Artwork removed from cart')
+                return redirect('cart')
+
+            cart_item.save()
         except Artwork.DoesNotExist:
             messages.error(request, 'Artwork not found')
-        
+
         return redirect('cart')
 
 class store(View):

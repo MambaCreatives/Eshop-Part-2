@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # If you want to use the class-based middleware globally, add:
-    # 'store.middlewares.auth_middleware.AuthMiddleware',
+    'store.middlewares.auth_middleware.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'Eshop.urls'
@@ -127,6 +127,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'store/static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

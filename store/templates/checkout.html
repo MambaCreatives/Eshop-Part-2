@@ -9,34 +9,44 @@
     <h2 class="mb-4">Checkout</h2>
     
     <div class="row">
+        <!-- Order Items Section -->
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Order Items</h5>
                 </div>
                 <div class="card-body">
-                    {% for artwork_id, quantity in request.session.cart.items %}
-                    {% with artwork=artwork_id|get_artwork %}
-                    <div class="row mb-3">
-                        <div class="col-2">
-                            <img src="{{ artwork.image.url }}" alt="{{ artwork.name }}" class="img-fluid rounded">
+                    {% if cart_items %}
+                        {% for cart_item in cart_items %}
+                        <div class="row mb-3">
+                            <div class="col-2">
+                                {% if cart_item.artwork.image %}
+                                    <img src="{{ cart_item.artwork.image.url }}" alt="{{ cart_item.artwork.name }}" class="img-fluid rounded">
+                                {% else %}
+                                    <img src="{% static 'images/default-placeholder.png' %}" alt="No Image" class="img-fluid rounded">
+                                {% endif %}
+                            </div>
+                            <div class="col-7">
+                                <h6 class="mb-1">{{ cart_item.artwork.name }}</h6>
+                                <p class="mb-1 text-muted">
+                                    Category: {{ cart_item.artwork.get_category_display }}
+                                </p>
+                                <p class="mb-0">Quantity: {{ cart_item.quantity }}</p>
+                            </div>
+                            <div class="col-3 text-end">
+                                <p class="mb-0">KSH {{ cart_item.artwork.price|multiply:cart_item.quantity }}</p>
+                            </div>
                         </div>
-                        <div class="col-7">
-                            <h6 class="mb-1">{{ artwork.name }}</h6>
-                            <p class="mb-1 text-muted">Category: {{ artwork.category.name }}</p>
-                            <p class="mb-0">Quantity: {{ quantity }}</p>
-                        </div>
-                        <div class="col-3 text-end">
-                            <p class="mb-0">KSH {{ artwork.price|multiply:quantity }}</p>
-                        </div>
-                    </div>
-                    {% if not forloop.last %}<hr>{% endif %}
-                    {% endwith %}
-                    {% endfor %}
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No items in your cart.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        
+
+        <!-- Order Summary Section -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -54,7 +64,17 @@
                             <input type="tel" class="form-control" id="phone" name="phone" required>
                         </div>
                         <hr>
-                        <button type="submit" class="btn btn-primary w-100">Place Order</button>
+                        <div class="d-flex justify-content-between">
+                            <strong>Subtotal:</strong> <span>KSH {{ subtotal }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Shipping:</strong> <span>KSH {{ shipping }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <h5>Total:</h5> <h5>KSH {{ total }}</h5>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Place Order</button>
                     </form>
                 </div>
             </div>

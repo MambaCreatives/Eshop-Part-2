@@ -17,7 +17,7 @@ class Customer(models.Model):
         ('customer', 'Art Buyer'),
         ('artist', 'Artist'),
     )
-    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)  # ✅ Ensure User relation exists
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone = models.CharField(max_length=15)
@@ -87,8 +87,8 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
     )
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    artwork = models.ForeignKey('Artwork', on_delete=models.CASCADE)  # Make sure this field exists
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True)
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE)  # Make sure this field exists
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     address = models.TextField()
@@ -99,8 +99,8 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
     @classmethod
-    def get_orders_by_customer(cls, user):
-        return cls.objects.filter(user=user).order_by('-date')
+    def get_orders_by_customer(cls, customer):
+        return cls.objects.filter(customer=customer).order_by('-date')
 
     def get_status_display(self):
         return dict(self.STATUS_CHOICES)[self.status]
