@@ -8,6 +8,11 @@ from django.contrib import messages
 from django.utils.decorators import method_decorator
 #from .utils import predict_category
 from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+
+
+
 # Importing models
 
 from .models import Category
@@ -186,36 +191,44 @@ class CheckOut(View):
     })
 
 
+
     def post(self, request):
         """Process checkout and create orders from the cart"""
         customer_id = request.session.get('customer')
         if not customer_id:
-            return redirect('login')
+         return redirect('login')
 
         try:
-            customer = Customer.objects.get(id=customer_id)
+           customer = Customer.objects.get(id=customer_id)
         except Customer.DoesNotExist:
             messages.error(request, 'Customer not found')
             return redirect('checkout')
 
-        cart_items = Cart.objects.filter(customer=customer, status=False)  # Fetch cart items
+        cart_items = Cart.objects.filter(customer=customer, status=False).select_related('artwork')
 
         if not cart_items.exists():
-            messages.error(request, 'Your cart is empty')
-            return redirect('cart')
+           messages.error(request, 'Your cart is empty')
+           return redirect('cart')
 
         address = request.POST.get('address')
         phone = request.POST.get('phone')
 
         if not address or not phone:
-            messages.error(request, 'Address and phone are required')
-            return redirect('checkout')
+           messages.error(request, 'Address and phone are required')
+           return redirect('checkout')
 
         orders_created = []
 
         for cart_item in cart_items:
             try:
-                artwork = Artwork.objects.get(id=cart_item.artwork.id)
+                # ✅ Verify artwork exists before creating order
+                artwork = get_object_or_404(Artwork, id=cart_item.artwork.id)
+                
+                if not artwork or not artwork.id:
+                    messages.error(request, f'Invalid artwork in cart item with ID {cart_item.id}')
+                    return redirect('cart')
+
+                # ✅ Create order with validated data
                 order = Order.objects.create(
                     customer=customer,
                     artwork=artwork,
@@ -223,27 +236,26 @@ class CheckOut(View):
                     quantity=cart_item.quantity,
                     address=address,
                     phone=phone,
-                    status='pending'  # Default status
+                    status='pending'
                 )
                 orders_created.append(order)
                 print(f"✅ SUCCESS: Order created -> Order ID: {order.id}")
-            except Artwork.DoesNotExist:
-                messages.error(request, f'Artwork with ID {cart_item.artwork.id} not found')
+
+            except Exception as e:
+                messages.error(request, f'Error placing order for artwork {cart_item.artwork.id}: {str(e)}')
                 return redirect('checkout')
-            
-        # ✅ Clear cart after order placement
-        cart_items.delete()
+
+        # ✅ Mark cart items as completed instead of deleting them
+            cart_items.update(status=True)
 
         messages.success(request, 'Orders placed successfully!')
 
-        # ✅ Redirect to order details if only one order
+    # ✅ Redirect based on the number of orders created
         if len(orders_created) == 1:
-            return redirect('order_detail', order_id=orders_created[0].id)
-        else:
-                messages.error(request, 'Error placing orders')
-            
+          return redirect('order_detail', order_id=orders_created[0].id)
+    
         return redirect('orders')
-
+ 
 
 
 class OrderView(View): 
@@ -354,48 +366,89 @@ class ArtistDashboard(View):
             'artist': artist,
             'artworks': artworks
         })
+import os
+import numpy as np
+from django.conf import settings
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from django.http import JsonResponse
+
+
+
+MODEL_PATH = os.path.join(settings.BASE_DIR, "static/ml model/art_classifier.keras")
+model = load_model(MODEL_PATH)
+
+# Define class labels based on the trained model categories
+CLASS_LABELS = ["Pencil Drawing", "Thread Art", "Painting"]
 
 class UploadArtwork(View):
     @method_decorator(auth_middleware)
     def dispatch(self, request, *args, **kwargs):
-        if request.session.get('user_type') != 'artist':
-            messages.error(request, 'Only artists can upload artwork')
-            return redirect('homepage')
+        """Ensure only artists can upload artwork"""
+        if request.session.get("user_type") != "artist":
+            messages.error(request, "Only artists can upload artwork")
+            return redirect("homepage")
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get(self, request):
-        return render(request, 'upload_artwork.html')
-    
+        """Render upload artwork page"""
+        return render(request, "upload_artwork.html")
+
     def post(self, request):
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        image = request.FILES.get('image')
-        category = request.POST.get('category')
-        
-        if not all([name, description, price, image, category]):
-            messages.error(request, 'All fields are required')
-            return render(request, 'upload_artwork.html')
-            
+        """Handle artwork upload and auto-classification"""
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        price = request.POST.get("price")
+        image = request.FILES.get("image")
+
+        if not all([name, description, price, image]):
+            messages.error(request, "All fields are required")
+            return render(request, "upload_artwork.html")
+
         try:
-            artist_id = request.session.get('customer')
-            
+            # Get artist ID from session
+            artist_id = request.session.get("customer")
+            artist = Customer.objects.get(id=artist_id)
+
+            # Save uploaded image temporarily
+            img_path = os.path.join(settings.MEDIA_ROOT, "uploads", image.name)
+            with open(img_path, "wb+") as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+
+            # ✅ Auto-classify artwork using the model
+            category = self.classify_image(img_path)
+
+            # ✅ Save the artwork along with its category
             artwork = Artwork(
                 name=name,
-                artist=Customer.objects.get(id=artist_id),
+                artist=artist,
                 description=description,
                 price=float(price),
-                image=image,
-                category=category
+                image=image,  # Django handles file storage
+                category=category,  # Auto-classified category
             )
             artwork.save()
-            messages.success(request, 'Artwork uploaded successfully!')
-            return redirect('artist_dashboard')
-            
+
+            messages.success(request, f"Artwork uploaded successfully! Classified as: {category}")
+            return redirect("artist_dashboard")
+
         except Exception as e:
-            messages.error(request, f'Error uploading artwork: {str(e)}')
-            return render(request, 'upload_artwork.html')
-  
+            messages.error(request, f"Error uploading artwork: {str(e)}")
+            return render(request, "upload_artwork.html")
+
+    def classify_image(self, img_path):
+        """Preprocess and classify the image using the trained model"""
+        img = image.load_img(img_path, target_size=(224, 224))  # Adjust as per your model input size
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)  # Normalize input
+
+        # Make prediction
+        predictions = model.predict(img_array)
+        predicted_index = np.argmax(predictions)
+        return CLASS_LABELS[predicted_index]  # Return predicted category name
 class ArtistGallery(View):
     def get(self, request, artist_id=None):
         if artist_id:

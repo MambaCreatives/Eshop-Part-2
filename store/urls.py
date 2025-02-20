@@ -5,6 +5,7 @@ from .views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import predict_art_category
 
 urlpatterns = [ 
     path('', Index.as_view(), name='homepage'), 
@@ -25,6 +26,10 @@ urlpatterns = [
     path('artist/upload/', UploadArtwork.as_view(), name='upload_artwork'),
     path('artist/<int:artist_id>/', ArtistGallery.as_view(), name='artist_gallery'),
     path('artists/', ArtistGallery.as_view(), name='artists_list'),
+    
+ #path("classify/", predict_art_category, name="classify_art"),
+    
+  
 ]
 
 # Serve media files during development
