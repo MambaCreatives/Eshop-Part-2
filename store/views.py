@@ -6,10 +6,12 @@ from django.contrib.auth.hashers import check_password,make_password
 import datetime
 from django.contrib import messages
 from django.utils.decorators import method_decorator
-#from .utils import predict_category
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from .utility import classify_image
+import os 
 
 
 
@@ -366,89 +368,9 @@ class ArtistDashboard(View):
             'artist': artist,
             'artworks': artworks
         })
-import os
-import numpy as np
-from django.conf import settings
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.vgg16 import preprocess_input
-from django.http import JsonResponse
 
 
 
-MODEL_PATH = os.path.join(settings.BASE_DIR, "static/ml model/art_classifier.keras")
-model = load_model(MODEL_PATH)
-
-# Define class labels based on the trained model categories
-CLASS_LABELS = ["Pencil Drawing", "Thread Art", "Painting"]
-
-class UploadArtwork(View):
-    @method_decorator(auth_middleware)
-    def dispatch(self, request, *args, **kwargs):
-        """Ensure only artists can upload artwork"""
-        if request.session.get("user_type") != "artist":
-            messages.error(request, "Only artists can upload artwork")
-            return redirect("homepage")
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request):
-        """Render upload artwork page"""
-        return render(request, "upload_artwork.html")
-
-    def post(self, request):
-        """Handle artwork upload and auto-classification"""
-        name = request.POST.get("name")
-        description = request.POST.get("description")
-        price = request.POST.get("price")
-        image = request.FILES.get("image")
-
-        if not all([name, description, price, image]):
-            messages.error(request, "All fields are required")
-            return render(request, "upload_artwork.html")
-
-        try:
-            # Get artist ID from session
-            artist_id = request.session.get("customer")
-            artist = Customer.objects.get(id=artist_id)
-
-            # Save uploaded image temporarily
-            img_path = os.path.join(settings.MEDIA_ROOT, "uploads", image.name)
-            with open(img_path, "wb+") as destination:
-                for chunk in image.chunks():
-                    destination.write(chunk)
-
-            # ✅ Auto-classify artwork using the model
-            category = self.classify_image(img_path)
-
-            # ✅ Save the artwork along with its category
-            artwork = Artwork(
-                name=name,
-                artist=artist,
-                description=description,
-                price=float(price),
-                image=image,  # Django handles file storage
-                category=category,  # Auto-classified category
-            )
-            artwork.save()
-
-            messages.success(request, f"Artwork uploaded successfully! Classified as: {category}")
-            return redirect("artist_dashboard")
-
-        except Exception as e:
-            messages.error(request, f"Error uploading artwork: {str(e)}")
-            return render(request, "upload_artwork.html")
-
-    def classify_image(self, img_path):
-        """Preprocess and classify the image using the trained model"""
-        img = image.load_img(img_path, target_size=(224, 224))  # Adjust as per your model input size
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0)
-        img_array = preprocess_input(img_array)  # Normalize input
-
-        # Make prediction
-        predictions = model.predict(img_array)
-        predicted_index = np.argmax(predictions)
-        return CLASS_LABELS[predicted_index]  # Return predicted category name
 class ArtistGallery(View):
     def get(self, request, artist_id=None):
         if artist_id:
@@ -553,7 +475,61 @@ class store(View):
                     'cart': cart
                 })
 
+class UploadArtwork(View):
+    @method_decorator(auth_middleware)
+    def dispatch(self, request, *args, **kwargs):
+        """Ensure only artists can upload artwork"""
+        if request.session.get("user_type") != "artist":
+            messages.error(request, "Only artists can upload artwork")
+            return redirect("homepage")
+        return super().dispatch(request, *args, **kwargs)
 
+    def get(self, request):
+        """Render upload artwork page"""
+        return render(request, "upload_artwork.html")
+
+    def post(self, request):
+        """Handle artwork upload and auto-classification"""
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        price = request.POST.get("price")
+        image = request.FILES.get("image")
+
+        if not all([name, description, price, image]):
+            messages.error(request, "All fields are required")
+            return render(request, "upload_artwork.html")
+
+        try:
+            # Get artist ID from session
+            artist_id = request.session.get("customer")
+            artist = Customer.objects.get(id=artist_id)
+
+            # Save uploaded image temporarily
+            img_path = os.path.join(settings.MEDIA_ROOT, "uploads", image.name)
+            with open(img_path, "wb+") as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+
+            # Auto-classify artwork using the model
+            category = classify_image(img_path)
+
+            # Save the artwork along with its category
+            artwork = Artwork(
+                name=name,
+                artist=artist,
+                description=description,
+                price=float(price),
+                image=image,  # Django handles file storage
+                category=category,  # Auto-classified category
+            )
+            artwork.save()
+
+            messages.success(request, f"Artwork uploaded successfully! Classified as: {category}")
+            return redirect("artist_dashboard")
+
+        except Exception as e:
+            messages.error(request, f"Error uploading artwork: {str(e)}")
+            return render(request, "upload_artwork.html")
 
 
   
