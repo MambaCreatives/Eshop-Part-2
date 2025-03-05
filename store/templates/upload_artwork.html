@@ -1,26 +1,51 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block content %}
 <div class="container py-5">
     <h2>Upload Artwork</h2>
+
+    <!-- Display Messages (Success/Error) -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        
         <div class="mb-3">
             <label for="name" class="form-label">Artwork Name</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
+
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>
             <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
         </div>
+
         <div class="mb-3">
             <label for="price" class="form-label">Price</label>
             <input type="number" class="form-control" id="price" name="price" step="0.01" required>
         </div>
+
         <div class="mb-3">
             <label for="image" class="form-label">Upload Image</label>
             <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
         </div>
+
+        <!-- Category Dropdown (Optional: Leave empty for AI prediction) -->
+        <div class="mb-3">
+            <label for="category" class="form-label">Category (Leave empty for AI prediction)</label>
+            <select class="form-control" id="category" name="category">
+                <option value="">Auto-Detect (AI)</option>
+                <option value="pencil">Pencil Drawing</option>
+                <option value="painting">Painting</option>
+                <option value="thread">Thread Art</option>
+            </select>
+        </div>
+
         <button type="submit" class="btn btn-primary">Upload</button>
     </form>
 </div>

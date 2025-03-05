@@ -1,5 +1,4 @@
 from django.db import models
-
 from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.views import View
 from django.contrib.auth.hashers import check_password,make_password
@@ -10,8 +9,15 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from .utility import classify_image
 import os 
+from django.contrib.auth.decorators import login_required
+from django.views.generic.edit import FormView
+from .forms import ArtworkForm
+from .utility import extract_features
+from django.urls import reverse
+from urllib.parse import urlparse
+
+
 
 
 
@@ -74,7 +80,6 @@ class Login(View):
             error_message = 'User not found'
   
         return render(request, 'login.html', {'error': error_message}) 
-  
   
 def logout(request): 
     request.session.clear() 
@@ -475,61 +480,40 @@ class store(View):
                     'cart': cart
                 })
 
-class UploadArtwork(View):
-    @method_decorator(auth_middleware)
+class UploadArtwork(FormView):
+    template_name = "accounts/upload_artwork.html"
+    form_class = ArtworkForm
+
+    @method_decorator(login_required)  # Ensure user is logged in
     def dispatch(self, request, *args, **kwargs):
-        """Ensure only artists can upload artwork"""
-        if request.session.get("user_type") != "artist":
-            messages.error(request, "Only artists can upload artwork")
-            return redirect("homepage")
+        if request.session.get('user_type') != 'artist':
+            messages.error(request, 'Only artists can upload artwork.')
+            return redirect('homepage')
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request):
-        """Render upload artwork page"""
-        return render(request, "upload_artwork.html")
-
-    def post(self, request):
-        """Handle artwork upload and auto-classification"""
-        name = request.POST.get("name")
-        description = request.POST.get("description")
-        price = request.POST.get("price")
-        image = request.FILES.get("image")
-
-        if not all([name, description, price, image]):
-            messages.error(request, "All fields are required")
-            return render(request, "upload_artwork.html")
+    def form_valid(self, form):
+        artwork = form.save(commit=False)
+        artist_id = self.request.session.get('customer')
 
         try:
-            # Get artist ID from session
-            artist_id = request.session.get("customer")
-            artist = Customer.objects.get(id=artist_id)
+            artwork.artist = Customer.objects.get(id=artist_id)
 
-            # Save uploaded image temporarily
-            img_path = os.path.join(settings.MEDIA_ROOT, "uploads", image.name)
-            with open(img_path, "wb+") as destination:
-                for chunk in image.chunks():
-                    destination.write(chunk)
+            # Predict category if not set
+            if not artwork.category:
+                artwork.category = artwork.predict_category()
 
-            # Auto-classify artwork using the model
-            category = classify_image(img_path)
-
-            # Save the artwork along with its category
-            artwork = Artwork(
-                name=name,
-                artist=artist,
-                description=description,
-                price=float(price),
-                image=image,  # Django handles file storage
-                category=category,  # Auto-classified category
-            )
             artwork.save()
-
-            messages.success(request, f"Artwork uploaded successfully! Classified as: {category}")
-            return redirect("artist_dashboard")
+            messages.success(self.request, 'Artwork uploaded successfully!')
+            return redirect('artwork_detail', artwork_id=artwork.id)  # Redirect to detail page
+        
+        except Customer.DoesNotExist:
+            messages.error(self.request, 'Artist not found.')
+            return redirect('homepage')
 
         except Exception as e:
-            messages.error(request, f"Error uploading artwork: {str(e)}")
-            return render(request, "upload_artwork.html")
+            messages.error(self.request, f'Error uploading artwork: {str(e)}')
+            return self.form_invalid(form)
 
-
-  
+    def form_invalid(self, form):
+        messages.error(self.request, 'Please correct the errors below.')
+        return self.render_to_response(self.get_context_data(form=form))

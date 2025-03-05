@@ -28,7 +28,7 @@ urlpatterns = [
     path('artists/', ArtistGallery.as_view(), name='artists_list'),
     
     # Prediction path
-    
+    path('upload/', UploadArtwork.as_view(), name='upload_artwork')
   
 ]
 

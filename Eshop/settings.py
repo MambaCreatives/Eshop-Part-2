@@ -144,5 +144,5 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-LOGIN_URL = 'login'  # This should match your login URL name
+LOGIN_URL = '/login/'  # This should match your login URL name
 LOGIN_REDIRECT_URL = 'homepage'  # Where to redirect after login

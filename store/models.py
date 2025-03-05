@@ -2,6 +2,11 @@ from django.db import models
 import datetime
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+import os
+import joblib
+from django.conf import settings
+from .utility import extract_features 
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -50,20 +55,37 @@ class Artwork(models.Model):
         ('painting', 'Painting'),
         ('thread', 'Thread Art'),
     )
-    
+
     name = models.CharField(max_length=100)
-    artist = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='artworks')
+    artist = models.ForeignKey('store.Customer', on_delete=models.CASCADE, related_name='artworks')
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='artworks/')
-    category = models.CharField(max_length=20, choices=ARTWORK_CATEGORIES)
+    category = models.CharField(max_length=20, choices=ARTWORK_CATEGORIES, blank=True)  # Allow AI to fill it
     created_at = models.DateTimeField(auto_now_add=True)
-    slug = models.SlugField(unique=True, blank=True)  # For SEO-friendly URLs
+    slug = models.SlugField(unique=True, blank=True)  # SEO-friendly URLs
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+
+        # Auto-categorization using AI model if category is not set
+        if not self.category:
+            self.category = self.predict_category()
+
         super().save(*args, **kwargs)
+
+    def predict_category(self):
+        """Predicts the artwork category using a pre-trained ML model."""
+        model_path = os.path.join(settings.BASE_DIR,  'store ','art_classifier_model.joblib')
+
+        if os.path.exists(model_path):
+            model, le = joblib.load(model_path)
+            features = extract_features(self.image.path).reshape(1, -1)
+            predicted_category = le.inverse_transform(model.predict(features))[0]
+            return predicted_category
+
+        return 'unknown'  # Default if model is missing
 
     def __str__(self):
         return self.name

@@ -1,40 +1,20 @@
-import tensorflow as tf
-print("TensorFlow Version:", tf.__version__)
-from tensorflow import keras 
-import os
+import cv2
 import numpy as np
-from tensorflow.python.keras.models import load_model
 from PIL import Image
-from tensorflow.keras.applications.vgg16 import preprocess_input
-print("VGG16 module is available!")
-from django.conf import settings
 
+def extract_features(image_path):
+    """Extracts features from the uploaded image (color histogram + edges)."""
+    img = cv2.imread(image_path)
+    img = cv2.resize(img, (128, 128))
 
-# Define class labels based on the trained model categories
-CLASS_LABELS = ["Pencil Drawing", "Thread Art", "Painting"]
+    # Convert to grayscale and extract edges
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
 
-# Load the model (using relative path)
-MODEL_PATH = os.path.join(settings.BASE_DIR, "store", "ml model", "")
+    # Extract color histogram
+    hist = cv2.calcHist([img], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    hist = cv2.normalize(hist, hist).flatten()
 
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
-
-# Compile the model
-model = load_model(MODEL_PATH)
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-
-def classify_image(img_path):
-    """Preprocess and classify the image using the trained model"""
-    try:
-        img = Image.open(img_path).resize((224, 224)).convert('RGB') # convert to RGB
-        img_array = np.array(img)
-        img_array = np.expand_dims(img_array, axis=0)
-        img_array = preprocess_input(img_array) # preprocess the image
-
-        # Make prediction
-        predictions = model.predict(img_array)
-        predicted_index = np.argmax(predictions)
-        return CLASS_LABELS[predicted_index]  # Return predicted category name
-    except Exception as e:
-        print(f"Error processing image: {e}")
-        raise
+    # Combine features
+    features = np.hstack((hist, edges.flatten()))
+    return features
