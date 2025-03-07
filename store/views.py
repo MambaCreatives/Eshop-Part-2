@@ -14,19 +14,13 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic.edit import FormView
 from .forms import ArtworkForm
 from .utility import extract_features
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.urls import reverse
 from urllib.parse import urlparse
+from django.contrib.auth import logout
+from django.views.generic import DetailView
 
 
-
-
-
-# Importing models
-
-from .models import Category
-from .models import Customer
-from .models import Order
-from .models import Artwork
 
 # Importing middleware
 from store.middlewares.auth_middleware import auth_middleware
@@ -50,121 +44,83 @@ class Index(View):
             'categories': categories,
             'cart': cart
         })
-
-class Login(View): 
-    def get(self, request): 
-        if request.session.get('customer'):
+class Login(View):
+    def get(self, request):
+        if request.user.is_authenticated:
             return redirect('homepage')
-        return render(request, 'login.html') 
-  
-    def post(self, request): 
-        email = request.POST.get('email') 
-        password = request.POST.get('password') 
-        customer = Customer.get_customer_by_email(email) 
-        error_message = None
-        
-        if customer: 
-            flag = check_password(password, customer.password) 
-            if flag: 
+        return render(request, 'login.html')
+
+    def post(self, request):
+        email = request.POST.get('email', '')
+        password = request.POST.get('password', '')
+       
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            auth_login(request, user)
+            try:
+                customer = Customer.objects.get(user=user)
                 request.session['customer'] = customer.id
                 request.session['user_type'] = customer.user_type
-                
-                # Handle return URL
-                return_url = request.GET.get('return_url')
-                if return_url:
-                    return redirect(return_url)
-                    return redirect('homepage') 
-            else: 
-                error_message = 'Invalid password'
-        else: 
-            error_message = 'User not found'
-  
-        return render(request, 'login.html', {'error': error_message}) 
-  
-def logout(request): 
-    request.session.clear() 
-    return redirect('login') 
+            except Customer.DoesNotExist:
+              pass  # If no Customer profile exists, proceed normally 
+            return redirect('homepage')
+        else:
+            return render(request, 'login.html', {'error': 'Invalid credentials'})
+def logout_view(request):
+    # Clear the cart from session
+    if 'cart' in request.session:
+        del request.session['cart']
+    # Clear customer info from session
+    if 'customer' in request.session:
+        del request.session['customer'] 
+    # Clear user type from session if it exists
+    if 'user_type' in request.session:
+        del request.session['user_type']
+    # Logout the user
+    logout(request)   
+    # Add a success message
+    messages.success(request, "You have been successfully logged out.")
+    # Redirect to home page
+    return redirect('homepage')
+
 
 class Signup(View):
-    def get(self, request): 
-        return render(request, 'signup.html') 
-  
-    def post(self, request): 
-        postData = request.POST 
-        first_name = postData.get('firstname') 
-        last_name = postData.get('lastname') 
-        phone = postData.get('phone') 
-        email = postData.get('email') 
-        password = postData.get('password') 
+    def get(self, request):
+        return render(request, 'signup.html')
+
+    def post(self, request):
+        postData = request.POST
+        first_name = postData.get('firstname')
+        last_name = postData.get('lastname')
+        phone = postData.get('phone')
+        email = postData.get('email')
+        password = postData.get('password')
         user_type = postData.get('user_type', 'customer')
-        
-        # Additional artist fields
+
+        # Additional fields for artists
         bio = postData.get('bio') if user_type == 'artist' else None
         artist_statement = postData.get('artist_statement') if user_type == 'artist' else None
         profile_image = request.FILES.get('profile_image') if user_type == 'artist' else None
-        
-        value = { 
-            'first_name': first_name, 
-            'last_name': last_name, 
-            'phone': phone, 
-            'email': email,
-            'user_type': user_type,
-            'bio': bio,
-            'artist_statement': artist_statement
-        } 
-  
-        customer = Customer(
-            first_name=first_name,
-                            last_name=last_name, 
-                            phone=phone, 
-                            email=email, 
-            password=password,
+
+        # Check if user already exists
+        if User.objects.filter(username=email).exists():
+            return render(request, 'signup.html', {'error': 'Email already registered'})
+
+        # Create User object
+        user = User.objects.create_user(username=email, first_name=first_name, last_name=last_name, email=email, password=password)
+
+        # Create Customer profile linked to User
+        customer = Customer.objects.create(
+            user=user,
+            phone=phone,
             user_type=user_type,
             bio=bio,
             artist_statement=artist_statement,
             profile_image=profile_image
         )
-        
-        error_message = self.validateCustomer(customer) 
-  
-        if not error_message: 
-            customer.password = make_password(password) 
-            customer.register() 
-            return redirect('homepage') 
-        else: 
-            data = { 
-                'error': error_message, 
-                'values': value 
-            } 
-            return render(request, 'signup.html', data) 
-  
-    def validateCustomer(self, customer): 
-        error_message = None
-        if (not customer.first_name): 
-            error_message = "Please Enter your First Name !!"
-        elif len(customer.first_name) < 3: 
-            error_message = 'First Name must be 3 char long or more'
-        elif not customer.last_name: 
-            error_message = 'Please Enter your Last Name'
-        elif len(customer.last_name) < 3: 
-            error_message = 'Last Name must be 3 char long or more'
-        elif not customer.phone: 
-            error_message = 'Enter your Phone Number'
-        elif len(customer.phone) < 10: 
-            error_message = 'Phone Number must be 10 char Long'
-        elif len(customer.password) < 5: 
-            error_message = 'Password must be 5 char long'
-        elif len(customer.email) < 5: 
-            error_message = 'Email must be 5 char long'
-        elif customer.isExists(): 
-            error_message = 'Email Address Already Registered..'
-        # saving 
-  
-        return error_message 
 
-        
-    
-
+        return redirect('login')  # Redirect to login page after signup
 
 class CheckOut(View):
     @method_decorator(auth_middleware)
@@ -462,7 +418,10 @@ class CartView(View):
             messages.error(request, 'Artwork not found')
 
         return redirect('cart')
-
+class ArtworkDetailView(DetailView):
+    model = Artwork
+    template_name = 'artwork_detail.html'
+    context_object_name = 'artwork'
 class store(View):
             def get(self, request):
                 cart = request.session.get('cart', {})  
@@ -481,7 +440,7 @@ class store(View):
                 })
 
 class UploadArtwork(FormView):
-    template_name = "accounts/upload_artwork.html"
+    template_name = "upload_artwork.html"
     form_class = ArtworkForm
 
     @method_decorator(login_required)  # Ensure user is logged in

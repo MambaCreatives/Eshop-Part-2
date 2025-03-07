@@ -6,6 +6,8 @@ import os
 import joblib
 from django.conf import settings
 from .utility import extract_features 
+from django.contrib.auth.hashers import make_password
+
 
 
 class Category(models.Model):
@@ -18,37 +20,23 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+
 class Customer(models.Model):
-    USER_TYPES = (
-        ('customer', 'Art Buyer'),
-        ('artist', 'Artist'),
-    )
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)
-    # Use Django's User model for password handling instead of storing plain text
-    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='customer')
-    
-    # For artists
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
+    phone = models.CharField(max_length=15, unique=True)
+    user_type = models.CharField(max_length=10, choices=[('customer', 'Customer'), ('artist', 'Artist')])
+
+    # Additional fields for artists
     bio = models.TextField(blank=True, null=True)
     artist_statement = models.TextField(blank=True, null=True)
-    profile_image = models.ImageField(upload_to='artist_profiles/', blank=True, null=True)
-    
-    def register(self):
-        self.save()
-    
-    @staticmethod
-    def get_customer_by_email(email):
-        try:
-            return Customer.objects.get(email=email)
-        except Customer.DoesNotExist:
-            return None
-    
-    def is_exists(self):
-        return Customer.objects.filter(email=self.email).exists()
+    profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
+    def __str__(self):
+        return self.user.username
+
+
+  
 class Artwork(models.Model):
     ARTWORK_CATEGORIES = (
         ('pencil', 'Pencil Drawing'),
@@ -61,49 +49,52 @@ class Artwork(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='artworks/')
-    category = models.CharField(max_length=20, choices=ARTWORK_CATEGORIES, blank=True)  # Allow AI to fill it
+    category = models.CharField(max_length=20, choices=ARTWORK_CATEGORIES, blank=True)  # Auto-filled
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(unique=True, blank=True)  # SEO-friendly URLs
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Artwork.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug  # Assign a unique slug
 
-        # Auto-categorization using AI model if category is not set
-        if not self.category:
-            self.category = self.predict_category()
+        super().save(*args, **kwargs)  # Save the object first
 
-        super().save(*args, **kwargs)
+        # Ensure the image exists before attempting to categorize
+        if not self.category and self.image:
+            try:
+                image_path = self.image.path  # Get absolute path
+                if os.path.exists(image_path):  
+                    self.category = self.predict_category()
+                    super().save(update_fields=['category'])  # Save only the updated category
+            except Exception as e:
+                print(f"Error categorizing artwork: {e}")
 
     def predict_category(self):
         """Predicts the artwork category using a pre-trained ML model."""
-        model_path = os.path.join(settings.BASE_DIR,  'store ','art_classifier_model.joblib')
+        model_path = os.path.join(settings.BASE_DIR, 'store', 'art_classifier_model.joblib')
 
-        if os.path.exists(model_path):
-            model, le = joblib.load(model_path)
-            features = extract_features(self.image.path).reshape(1, -1)
+        if not os.path.exists(model_path):
+            return 'unknown'  # Return default if model is missing
+
+        model, le = joblib.load(model_path)
+
+        try:
+            features = extract_features(self.image)  # Updated to use correct file handling
+            features = features.reshape(1, -1)
             predicted_category = le.inverse_transform(model.predict(features))[0]
             return predicted_category
-
-        return 'unknown'  # Default if model is missing
+        except Exception as e:
+            print(f"Error predicting category: {e}")
+            return 'unknown'
 
     def __str__(self):
         return self.name
-
-    @staticmethod
-    def get_artworks_by_id(ids):
-        return Artwork.objects.filter(id__in=ids)
-
-    @staticmethod
-    def get_all_artworks():
-        return Artwork.objects.all()
-
-    @staticmethod
-    def get_artworks_by_category(category):
-        if category:
-            return Artwork.objects.filter(category=category)
-        return Artwork.get_all_artworks()
-
 class Order(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),

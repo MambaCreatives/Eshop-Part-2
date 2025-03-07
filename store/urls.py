@@ -5,6 +5,8 @@ from .views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from . import views
+from .views import ArtworkDetailView
 
 
 urlpatterns = [ 
@@ -12,7 +14,7 @@ urlpatterns = [
     path('store/', store.as_view(), name='store'), 
     path('signup/', Signup.as_view(), name='signup'), 
     path('login/', Login.as_view(), name='login'), 
-    path('logout/', logout, name='logout'), 
+    path('logout/', views.logout_view, name='logout'),
     path('cart/', CartView.as_view(), name='cart'), 
     path('checkout/', CheckOut.as_view(), name='checkout'),
     
@@ -28,8 +30,8 @@ urlpatterns = [
     path('artists/', ArtistGallery.as_view(), name='artists_list'),
     
     # Prediction path
-    path('upload/', UploadArtwork.as_view(), name='upload_artwork')
-  
+    path('upload/', UploadArtwork.as_view(), name='upload_artwork'),
+    path('artwork/<int:pk>/', ArtworkDetailView.as_view(), name='artwork_detail'),  # ✅ ADD THIS
 ]
 
 # Serve media files during development

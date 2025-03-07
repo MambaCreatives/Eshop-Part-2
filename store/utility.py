@@ -1,10 +1,20 @@
 import cv2
 import numpy as np
-from PIL import Image
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
-def extract_features(image_path):
-    """Extracts features from the uploaded image (color histogram + edges)."""
-    img = cv2.imread(image_path)
+def extract_features(image):
+    """Extracts features from an image file (uploaded file or path)."""
+    
+    # ✅ Handle both uploaded files & saved image paths
+    if isinstance(image, InMemoryUploadedFile):
+        image_array = np.asarray(bytearray(image.read()), dtype=np.uint8)
+        img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    else:
+        img = cv2.imread(image)  # If image is saved as a file
+
+    if img is None:
+        raise ValueError(f"Error: Could not read image {image}")
+
     img = cv2.resize(img, (128, 128))
 
     # Convert to grayscale and extract edges
