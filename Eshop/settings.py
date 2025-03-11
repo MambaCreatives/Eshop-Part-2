@@ -9,19 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# settings.py
-import os
-
-# For serving media files during development
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -38,12 +30,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    #django default
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #myapp
     'store',
 ]
 
@@ -78,6 +72,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Eshop.wsgi.application'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -128,6 +125,10 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'store/static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+# For serving media files during development
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -143,5 +144,7 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-LOGIN_URL = '/login/'  # This should match your login URL name
-LOGIN_REDIRECT_URL = 'homepage'  # Where to redirect after login
+LOGIN_URL = '/login/'  # Ensure this matches your actual login URL
+LOGIN_REDIRECT_URL = 'homepage'  # Redirect to the homepage after login
+LOGOUT_REDIRECT_URL = 'login'  # Ensure users are sent back to login after logout
+

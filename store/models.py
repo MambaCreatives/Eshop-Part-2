@@ -7,6 +7,12 @@ import joblib
 from django.conf import settings
 from .utility import extract_features 
 from django.contrib.auth.hashers import make_password
+import cv2
+import numpy as np
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 
@@ -54,47 +60,81 @@ class Artwork(models.Model):
     slug = models.SlugField(unique=True, blank=True)  # SEO-friendly URLs
 
     def save(self, *args, **kwargs):
+        """Ensure slug is unique before saving"""
         if not self.slug:
-            base_slug = slugify(self.name)
-            slug = base_slug
-            counter = 1
-            while Artwork.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-            self.slug = slug  # Assign a unique slug
+           base_slug = slugify(self.name)
+           slug = base_slug
+           counter = 1
+           while Artwork.objects.filter(slug=slug).exists():
+               slug = f"{base_slug}-{counter}"
+               counter += 1
+           self.slug = slug  
 
-        super().save(*args, **kwargs)  # Save the object first
+        super().save(*args, **kwargs)  # ✅ Save the object to ensure the image is available
 
-        # Ensure the image exists before attempting to categorize
-        if not self.category and self.image:
-            try:
-                image_path = self.image.path  # Get absolute path
-                if os.path.exists(image_path):  
-                    self.category = self.predict_category()
-                    super().save(update_fields=['category'])  # Save only the updated category
-            except Exception as e:
-                print(f"Error categorizing artwork: {e}")
-
+    # ✅ Ensure the image file exists before trying to categorize
+        if not self.category or self.category == "unknown":
+           if self.image and os.path.exists(self.image.path):
+               print(f"✅ Image file found: {self.image.path}")  # Debugging statement
+               try:
+                   predicted_category = self.predict_category()
+                   if predicted_category != 'unknown':  
+                      self.category = predicted_category
+                      print(f"🎨 Predicted Category: {predicted_category}")  # Debugging
+                      Artwork.objects.filter(id=self.id).update(category=predicted_category)  # ✅ Force save in DB
+                   else:
+                    print("❌ Prediction returned 'unknown', category not updated.")
+               except Exception as e:
+                print(f"❌ Error categorizing artwork: {e}")
+        else:
+            print("❌ Error: Image file not found after saving!")
     def predict_category(self):
-        """Predicts the artwork category using a pre-trained ML model."""
+        """Predicts artwork category using ML model with robust image handling"""
         model_path = os.path.join(settings.BASE_DIR, 'store', 'art_classifier_model.joblib')
 
         if not os.path.exists(model_path):
-            return 'unknown'  # Return default if model is missing
-
-        model, le = joblib.load(model_path)
-
-        try:
-            features = extract_features(self.image)  # Updated to use correct file handling
-            features = features.reshape(1, -1)
-            predicted_category = le.inverse_transform(model.predict(features))[0]
-            return predicted_category
-        except Exception as e:
-            print(f"Error predicting category: {e}")
+            print("❌ Model file not found!")
             return 'unknown'
 
-    def __str__(self):
-        return self.name
+        try:
+            model, le = joblib.load(model_path)
+            print("✅ Model loaded successfully.")
+        except Exception as e:
+            print(f"❌ Model loading error: {e}")
+            return 'unknown'
+
+        try:
+            # Handle unsaved in-memory file (e.g., during form validation)
+            if isinstance(self.image, InMemoryUploadedFile):
+                image_data = self.image.read()
+                image_array = np.asarray(bytearray(image_data), dtype=np.uint8)
+                img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+            else:
+                # Handle saved file
+                if not self.image or not os.path.exists(self.image.path):
+                    print(f"❌ Image path invalid: {self.image.path if self.image else 'No image'}")
+                    return 'unknown'
+                img = cv2.imread(self.image.path)
+
+            if img is None:
+                print("❌ Failed to load image data")
+                return 'unknown'
+
+            # Image Processing
+            img = cv2.resize(img, (128, 128))
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 100, 200)
+            hist = cv2.calcHist([img], [0,1,2], None, [8,8,8], [0,256]*3)
+            hist = cv2.normalize(hist, hist).flatten()
+            features = np.hstack((hist, edges.flatten()))
+
+            prediction = model.predict(features.reshape(1, -1))
+            return le.inverse_transform(prediction)[0]
+
+        except Exception as e:
+            print(f"❌ Prediction error: {e}")
+            return 'unknown'
+    
 class Order(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),

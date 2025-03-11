@@ -1,19 +1,20 @@
 from django.urls import path
 from .views import (
-    Index, store, Signup, Login, logout, CheckOut, OrderView, 
+    Index, store, Signup, Login_view, logout, CheckOut, OrderView, 
     ArtistGallery, CartView, UploadArtwork, ArtistDashboard
 )
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 from .views import ArtworkDetailView
+from .views import Login_view
 
 
 urlpatterns = [ 
     path('', Index.as_view(), name='homepage'), 
     path('store/', store.as_view(), name='store'), 
     path('signup/', Signup.as_view(), name='signup'), 
-    path('login/', Login.as_view(), name='login'), 
+    path('login/', Login_view.as_view(), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('cart/', CartView.as_view(), name='cart'), 
     path('checkout/', CheckOut.as_view(), name='checkout'),
@@ -25,7 +26,7 @@ urlpatterns = [
 
     # Artist paths
     path('artist/dashboard/', ArtistDashboard.as_view(), name='artist_dashboard'),
-    path('artist/upload/', UploadArtwork.as_view(), name='upload_artwork'),
+    path('upload/<int:pk>/', UploadArtwork.as_view(), name='upload_artwork'),
     path('artist/<int:artist_id>/', ArtistGallery.as_view(), name='artist_gallery'),
     path('artists/', ArtistGallery.as_view(), name='artists_list'),
     

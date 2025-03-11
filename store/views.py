@@ -44,28 +44,45 @@ class Index(View):
             'categories': categories,
             'cart': cart
         })
-class Login(View):
+class Login_view(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('homepage')
+            print("User already authenticated, redirecting to homepage")
+            return redirect('homepage')  # Ensure 'homepage' exists in your URLs
+        print("Rendering login page")  # Debugging
         return render(request, 'login.html')
 
     def post(self, request):
         email = request.POST.get('email', '')
         password = request.POST.get('password', '')
-       
-        user = authenticate(request, username=email, password=password)
 
-        if user is not None:
+        print(f"Login attempt with email: {email}")  # Debugging
+
+        try:
+            user = User.objects.get(email=email)
+            print(f"User found in database: {user.username}")
+        except User.DoesNotExist:
+            print("User does not exist")  # Debugging
+            return render(request, 'login.html', {'error': 'Invalid credentials'})
+
+        user = authenticate(request, username=user.username, password=password)
+
+        if user:
+            print("User authenticated successfully")  # Debugging
             auth_login(request, user)
+
             try:
                 customer = Customer.objects.get(user=user)
                 request.session['customer'] = customer.id
                 request.session['user_type'] = customer.user_type
+                print(f"Customer profile found: {customer.user_type}")
             except Customer.DoesNotExist:
-              pass  # If no Customer profile exists, proceed normally 
-            return redirect('homepage')
+                print("No customer profile found")  # Debugging
+
+            return redirect(settings.LOGIN_REDIRECT_URL)  # Fix redirect issue
+
         else:
+            print("Authentication failed")  # Debugging
             return render(request, 'login.html', {'error': 'Invalid credentials'})
 def logout_view(request):
     # Clear the cart from session
@@ -463,7 +480,7 @@ class UploadArtwork(FormView):
 
             artwork.save()
             messages.success(self.request, 'Artwork uploaded successfully!')
-            return redirect('artwork_detail', artwork_id=artwork.id)  # Redirect to detail page
+            return redirect('upload_artwork', pk=artwork.id)  # Redirect to detail page
         
         except Customer.DoesNotExist:
             messages.error(self.request, 'Artist not found.')
