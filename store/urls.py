@@ -18,6 +18,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('cart/', CartView.as_view(), name='cart'), 
     path('checkout/', CheckOut.as_view(), name='checkout'),
+    path('faq/', views.faq, name='faq'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
+    path('contact/', views.contact, name='contact'),
+     
     
     # Order paths
     path('order/<int:order_id>/', OrderView.as_view(), name='order_detail'),

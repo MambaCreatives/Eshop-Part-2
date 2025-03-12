@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load cart_tags %}
+{% load cart_tags %}  <!-- Ensure cart_tags is properly loaded -->
 
 {% block title %}My Orders - DigiArt{% endblock %}
 
@@ -8,35 +8,23 @@
 <div class="container py-5">
     <h2 class="mb-4">My Orders</h2>
 
-    {% if order %}<!-- In your artwork list or detail template -->
-<form method="POST" action="{% url 'store:cart' %}">
-    {% csrf_token %}
-    <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
-    <input type="hidden" name="action" value="add">
-    <button type="submit" class="btn btn-primary">
-        Add to Cart
-    </button>
-</form><!-- In your artwork list or detail template -->
-<form method="POST" action="{% url 'store:cart' %}">
-    {% csrf_token %}
-    <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
-    <input type="hidden" name="action" value="add">
-    <button type="submit" class="btn btn-primary">
-        Add to Cart
-    </button>
-</form>
+    <!-- Debugging: Show number of orders -->
+    <p>Number of orders: {{ orders|length }}</p>
+
+    {% if orders %}
     <div class="row">
-        {% for order in orders%}
+        {% for order in orders %}
         <div class="col-12 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <span>Order #{{ order.id }}</span>
-                    <span class="badge {% if order.status == 'delivered' %}bg-success
-                                     {% elif order.status == 'cancelled' %}bg-danger
-                                     {% elif order.status == 'processing' %}bg-warning
-                                     {% elif order.status == 'shipped' %}bg-info
-                                     {% else %}bg-primary{% endif %}">
-                        {{ order.get_status_display }}
+                    <span class="badge 
+                        {% if order.status == 'delivered' %}bg-success
+                        {% elif order.status == 'cancelled' %}bg-danger
+                        {% elif order.status == 'processing' %}bg-warning
+                        {% elif order.status == 'shipped' %}bg-info
+                        {% else %}bg-primary{% endif %}">
+                        {{ order.get_status_display|default:order.status }}
                     </span>
                 </div>
                 <div class="card-body">

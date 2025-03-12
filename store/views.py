@@ -236,17 +236,17 @@ class CheckOut(View):
     
         return redirect('orders')
  
-
-
 class OrderView(View): 
     @method_decorator(auth_middleware)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
   
     def get(self, request, order_id=None):
-        customer = request.session.get('customer') 
-        if not customer:
+        customer_id = request.session.get('customer') 
+        if not customer_id:
             return redirect('login')
+
+        customer = Customer.objects.get(id=customer_id)  # Ensure customer object is retrieved
         
         # If order_id is provided, show single order detail
         if order_id:
@@ -257,8 +257,10 @@ class OrderView(View):
                 messages.error(request, 'Order not found')
                 return redirect('orders')
         
-        # Show all orders
-        orders = Order.get_orders_by_customer(customer) 
+        # ✅ Fetch all orders
+        orders = Order.objects.filter(customer=customer).order_by('-id')
+        print("✅ Orders fetched for customer:", orders)  # Debugging
+
         return render(request, 'orders.html', {'orders': orders}) 
 
     def post(self, request):
@@ -291,44 +293,30 @@ class OrderView(View):
                     address=address,
                     phone=phone
                 )
-                order.place_order()
+                order.save()
+                print(f"✅ Order saved: {order.id}")  # Debugging
                 orders_created.append(order)
             except Artwork.DoesNotExist:
+                print(f"⚠️ Artwork {artwork_id} does not exist.")  # Debugging
                 continue
         
         if orders_created:
-            # Clear the cart after successful order placement
+            # ✅ Clear session cart and update database cart
             request.session['cart'] = {}
+            request.session.modified = True
+            Cart.objects.filter(customer=customer, status=False).update(status=True)
+
             messages.success(request, 'Orders placed successfully!')
             
-            # If single order, redirect to its detail page
+            # ✅ Redirect properly
             if len(orders_created) == 1:
                 return redirect('order_detail', order_id=orders_created[0].id)
-        else:
-            messages.error(request, 'Error placing orders')
-            
-        return redirect('orders')
+            return redirect('orders')
 
-def login(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        
-        try:
-            customer = Customer.objects.get(email=email)
-            if customer.password == password:  # Note: In production, use proper password hashing
-                request.session['customer'] = customer.id
-                messages.success(request, 'Successfully logged in!')
-                return redirect('homepage')
-            else:
-                messages.error(request, 'Invalid password')
-        except Customer.DoesNotExist:
-            messages.error(request, 'No account found with this email')
-        
-        return render(request, 'login.html', {'values': {'email': email}})
-    
-    return render(request, 'login.html') 
-  
+        messages.error(request, 'Error placing orders')
+        return redirect('checkout')
+
+
 class ArtistDashboard(View):
     @method_decorator(auth_middleware)
     def dispatch(self, request, *args, **kwargs):
@@ -493,3 +481,13 @@ class UploadArtwork(FormView):
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
         return self.render_to_response(self.get_context_data(form=form))
+def faq(request):
+    return render(request, 'faq.html')
+
+def terms(request):
+    return render(request, 'terms.html')
+
+def privacy(request):
+    return render(request, 'privacy.html')
+def contact(request):
+    return render(request, 'contact.html')

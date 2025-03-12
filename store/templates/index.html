@@ -2,20 +2,33 @@
 {% load static %}
 {% load cart_tags %}
 
-{% block title %}DigiArt Store - Home{% endblock %}
+{% block title %}DigiArt Store - Discover Unique Artwork{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/homepage.css' %}">
+{% endblock %}
 
 {% block content %}
+<div class="featured-section">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold featured-title">Discover Unique Digital Art</h1>
+        <p class="lead">Explore our collection of handpicked digital artworks from talented artists around the world</p>
+        <a href="{% url 'artists_list' %}" class="btn btn-light btn-lg mt-3">Meet Our Artists</a>
+    </div>
+</div>
+
 <div class="container py-5">
     <!-- Category Filter -->
     <div class="mb-4">
-        <div class="btn-group" role="group" aria-label="Artwork categories">
-            <a href="{% url 'homepage' %}" class="btn btn-outline-primary {% if not request.GET.category %}active{% endif %}">
-                All
+        <h3 class="mb-3">Browse by Category</h3>
+        <div class="btn-group w-100" role="group" aria-label="Artwork categories">
+            <a href="{% url 'homepage' %}" class="btn btn-outline-primary flex-fill {% if not request.GET.category %}active{% endif %}">
+                All Artworks
             </a>
             {% for category in categories %}
             <a href="{% url 'homepage' %}?category={{ category }}" 
-               class="btn btn-outline-primary {% if request.GET.category == category %}active{% endif %}">
-                {{ category|title }}
+               class="btn btn-outline-primary flex-fill {% if request.GET.category == category %}active{% endif %}">
+                {{ category|title }} Art
             </a>
             {% endfor %}
         </div>
@@ -25,44 +38,87 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for artwork in artworks %}
         <div class="col">
-            <div class="card h-100">
-                <img src="{{ artwork.image.url }}" class="card-img-top" alt="{{ artwork.name }}">
+            <div class="card artwork-card h-100 shadow-sm">
+                <div class="position-relative">
+                    <img src="{{ artwork.image.url }}" class="card-img-top" alt="{{ artwork.name }}">
+                    {% if cart %}
+                        {% with qty=cart|get_item:artwork.id|default:0 %}
+                            {% if qty > 0 %}
+                                <span class="position-absolute top-0 end-0 m-2 badge bg-success">
+                                    {{ qty }} in cart
+                                </span>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </div>
                 <div class="card-body">
                     <h5 class="card-title">{{ artwork.name }}</h5>
-                    <p class="card-text">{{ artwork.description|truncatewords:20 }}</p>
-                    <p class="card-text text-muted">{{ artwork.get_category_display }}</p>
-                    <p class="card-text">
-                        <small class="text-muted">
-                            By {{ artwork.artist.first_name }} {{ artwork.artist.last_name }}
-                        </small>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <p class="card-text"><strong>KSH {{ artwork.price }}</strong></p>
-                        
-                        {% if cart %}
-                            {% with qty=cart|get_item:artwork.id|default:0 %}
-                                {% if qty > 0 %}
-                                    <span class="badge bg-secondary">{{ qty }} in cart</span>
-                                {% endif %}
-                            {% endwith %}
-                        {% endif %}
+                    <p class="card-text">{{ artwork.description|truncatewords:15 }}</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">{{ artwork.get_category_display }}</span>
+                        <span class="price-tag">KSH {{ artwork.price }}</span>
                     </div>
-                  
-                    <form method="post" action="{% url 'cart' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
-                        <button type="submit" class="btn btn-primary w-100">
-                            Add to Cart
-                        </button>
-                    </form>
+                    <div class="d-grid">
+                        <form method="post" action="{% url 'cart' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="artwork_id" value="{{ artwork.id }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                            </button>
+                        </form>
+                        <a href="{% url 'artwork_detail' artwork.id %}" class="btn btn-outline-secondary mt-2">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <small class="text-muted">
+                        By {{ artwork.artist.first_name }} {{ artwork.artist.last_name }}
+                    </small>
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="col-12 text-center">
-            <p>No artworks available.</p>
+        <div class="col-12 text-center empty-state">
+            <img src="{% static 'images/empty-art.svg' %}" alt="No artworks" class="img-fluid mb-4">
+            <p class="h4">No artworks found</p>
+            <p>Check back soon or filter by different categories</p>
         </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- Featured Artists Section -->
+<div class="container py-5">
+    <h2 class="text-center mb-4">Featured Artists</h2>
+    <div class="row g-4">
+        {% for artist in featured_artists %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img src="{{ artist.profile_image.url }}" class="card-img-top" alt="{{ artist.full_name }}">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ artist.full_name }}</h5>
+                    <p class="card-text">{{ artist.bio|truncatewords:20 }}</p>
+                    <a href="{% url 'artist_profile' artist.id %}" class="btn btn-primary">
+                        View Portfolio
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="container py-5 text-center">
+    <div class="row align-items-center">
+        <div class="col-md-8 mx-auto">
+            <h2>Find Your Perfect Piece</h2>
+            <p class="lead">Discover unique digital art that speaks to your style and personality</p>
+            <a href="{% url 'upload_artwork' %}" class="btn btn-outline-primary btn-lg mt-3">
+                <i class="fas fa-upload me-1"></i> Upload Your Own Artwork
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

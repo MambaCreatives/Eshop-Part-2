@@ -4,44 +4,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DigiArt Store - Discover and purchase unique digital artworks from talented artists around the world">
+    <meta name="keywords" content="digital art, artwork, artists, online gallery, art store">
+    <meta property="og:title" content="DigiArt Store - Discover Unique Digital Art">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourdomain.com">
+    <meta property="og:image" content="{% static 'images/logo.png' %}">
+    
     <title>{% block title %}DigiArt Store{% endblock %}</title>
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'homepage' %}">DigiArt Store</a>
+            <a class="navbar-brand" href="{% url 'homepage' %}">
+                <img src="{% static 'images/logo.png' %}" alt="DigiArt Logo" height="30" class="d-inline-block align-text-top me-2">
+                DigiArt Store
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'homepage' %}">Home</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'homepage' %}active{% endif %}" href="{% url 'homepage' %}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'artists_list' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'artists_list' %}active{% endif %}" href="{% url 'artists_list' %}">
                             <i class="fas fa-palette me-1"></i> Artists
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cart' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'cart' %}active{% endif %}" href="{% url 'cart' %}">
                             <i class="fas fa-shopping-cart me-1"></i> Cart
+                            {% if cart and cart.total_items > 0 %}
+                                <span class="badge bg-light text-dark ms-1" style="font-size: 0.7rem;">
+                                    {{ cart.total_items }}
+                                </span>
+                            {% endif %}
                         </a>
                     </li>
                     {% if request.session.customer %}
                         {% if request.session.user_type == 'artist' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'artist_dashboard' %}">Artist Dashboard</a>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'artist_dashboard' %}active{% endif %}" href="{% url 'artist_dashboard' %}">
+                                    <i class="fas fa-chart-line me-1"></i> Artist Dashboard
+                                </a>
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'orders' %}">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}" href="{% url 'orders' %}">
                                 <i class="fas fa-box me-1"></i> My Orders
                             </a>
                         </li>
@@ -52,10 +80,14 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'signup' %}active{% endif %}" href="{% url 'signup' %}">
+                                <i class="fas fa-user-plus me-1"></i> Signup
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -68,7 +100,7 @@
     <div class="container mt-3">
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
+            <i class="fas fa-info-circle me-2"></i> {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endfor %}
@@ -81,14 +113,54 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
-            <p class="mb-0">&copy; {% now "Y" %} DigiArt. All rights reserved.</p>
+    <footer class="bg-dark text-light py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About Us</h5>
+                    <p>DigiArt Store is a platform connecting artists with art lovers. We showcase unique digital artworks from talented creators around the world.</p>
+                </div>
+                <div class="col-md-2">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'homepage' %}" class="text-light text-decoration-none">Home</a></li>
+                        <li><a href="{% url 'artists_list' %}" class="text-light text-decoration-none">Artists</a></li>
+                        <li><a href="{% url 'cart' %}" class="text-light text-decoration-none">Cart</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'faq' %}" class="text-light text-decoration-none">FAQ</a></li>
+                        <li><a href="{% url 'contact' %}" class="text-light text-decoration-none">Contact Us</a></li>
+                        <li><a href="{% url 'terms' %}" class="text-light text-decoration-none">Terms & Conditions</a></li>
+                        <li><a href="{% url 'privacy' %}" class="text-light text-decoration-none">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Follow Us</h5>
+                    <div class="social-icons">
+                        <a href="#" class="text-light me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="text-center">
+                <p class="mb-0">&copy; {% now "Y" %} DigiArt Store. All rights reserved.</p>
+                <p class="mb-0">Made with <i class="fas fa-heart text-danger"></i> by Artists for Artists</p>
+            </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'script.js' %}"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
-</html> 
+</html>
