@@ -40,40 +40,53 @@
     </div>
 
     <!-- Artwork Grid -->
-    <h3 class="mb-4 text-center fw-bold">Artworks</h3>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {% for artwork in artworks %}
-        <div class="col artwork-item" data-category="{{ artwork.category }}">
-            <div class="card h-100 border-0 shadow-sm">
-                <img src="{{ artwork.image.url }}" class="card-img-top rounded" alt="{{ artwork.name }}">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">{{ artwork.name }}</h5>
-                    <p class="card-text">{{ artwork.description }}</p>
-                    <p class="card-text text-muted">
-                        Category: {{ artwork.get_category_display }}
-                        {% if artwork.ml_category %}
-                        <br>AI Verified as: {{ artwork.ml_category }}
-                        {% endif %}
-                    </p>
-                    <p class="card-text fw-bold">Price: KSH {{ artwork.price }}</p>
-                    
-                    <form method="post" action="{% url 'homepage' %}">
+<h3 class="mb-4 text-center fw-bold">Artworks</h3>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for artwork in artworks %}
+    <div class="col artwork-item" data-category="{{ artwork.category }}">
+        <div class="card h-100 border-0 shadow-sm">
+            <img src="{{ artwork.image.url }}" class="card-img-top rounded" alt="{{ artwork.name }}">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">{{ artwork.name }}</h5>
+                <p class="card-text">{{ artwork.description }}</p>
+                <p class="card-text text-muted">
+                    Category: {{ artwork.get_category_display }}
+                    {% if artwork.ml_category %}
+                    <br>AI Verified as: {{ artwork.ml_category }}
+                    {% endif %}
+                </p>
+                <p class="card-text fw-bold">Price: KSH {{ artwork.price }}</p>
+
+                <form method="post" action="{% url 'homepage' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="product" value="{{ artwork.id }}">
+                    <button type="submit" class="btn btn-primary w-100">Add to Cart</button>
+                </form>
+
+                <!-- Edit & Delete Buttons (Only Visible to the Artist) -->
+                {% if user == artwork.artist %}
+                <div class="d-flex justify-content-between mt-2">
+                    <a href="{% url 'edit_artwork' artwork.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <form method="post" action="{% url 'delete_artwork' artwork.id %}">
                         {% csrf_token %}
-                        <input type="hidden" name="product" value="{{ artwork.id }}">
-                        <button type="submit" class="btn btn-primary w-100">Add to Cart</button>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                            Delete
+                        </button>
                     </form>
                 </div>
-                <div class="card-footer bg-white text-muted text-center">
-                    <small>Posted on {{ artwork.created_at|date:"F j, Y" }}</small>
-                </div>
+                {% endif %}
+                
+            </div>
+            <div class="card-footer bg-white text-muted text-center">
+                <small>Posted on {{ artwork.created_at|date:"F j, Y" }}</small>
             </div>
         </div>
-        {% empty %}
-        <div class="col-12 text-center">
-            <p class="text-muted">No artworks available yet.</p>
-        </div>
-        {% endfor %}
     </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p class="text-muted">No artworks available yet.</p>
+    </div>
+    {% endfor %}
 </div>
 
 {% block extra_js %}

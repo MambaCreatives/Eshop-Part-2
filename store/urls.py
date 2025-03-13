@@ -8,7 +8,8 @@ from django.conf.urls.static import static
 from . import views
 from .views import ArtworkDetailView
 from .views import Login_view
-
+from .views import edit_artwork
+from .views import delete_artwork 
 
 urlpatterns = [ 
     path('', Index.as_view(), name='homepage'), 
@@ -22,7 +23,8 @@ urlpatterns = [
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
     path('contact/', views.contact, name='contact'),
-     
+    path('artwork/edit/<int:artwork_id>/', edit_artwork, name='edit_artwork'),
+    path('artwork/delete/<int:artwork_id>/', delete_artwork, name='delete_artwork'), 
     
     # Order paths
     path('order/<int:order_id>/', OrderView.as_view(), name='order_detail'),

@@ -36,8 +36,10 @@ class Index(View):
         
         # Filter by category if specified
         category = request.GET.get('category')
+        print(f"Requested category: {category}")  # Debugging
+        
         if category:
-            artworks = artworks.filter(category=category)
+            artworks = artworks.filter(category__iexact=category)
             
         return render(request, 'index.html', {
             'artworks': artworks,
@@ -491,3 +493,34 @@ def privacy(request):
     return render(request, 'privacy.html')
 def contact(request):
     return render(request, 'contact.html')
+@login_required
+def edit_artwork(request, artwork_id):
+    # Get the logged-in user's Customer profile
+    customer = get_object_or_404(Customer, user=request.user)
+
+    # Retrieve the artwork that belongs to this customer
+    artwork = get_object_or_404(Artwork, id=artwork_id, artist=customer)
+
+    if request.method == "POST":
+        form = ArtworkForm(request.POST, request.FILES, instance=artwork)
+        if form.is_valid():
+            form.save()
+            return redirect('artist_dashboard')  # Redirect to the artist's dashboard
+    else:
+        form = ArtworkForm(instance=artwork)
+
+    return render(request, 'edit_artwork.html', {'form': form, 'artwork': artwork})
+
+@login_required
+def delete_artwork(request, artwork_id):
+    # Get the logged-in user's Customer profile
+    customer = get_object_or_404(Customer, user=request.user)
+
+    # Retrieve the artwork that belongs to this customer
+    artwork = get_object_or_404(Artwork, id=artwork_id, artist=customer)
+
+    if request.method == "POST":
+        artwork.delete()
+        return redirect('artist_dashboard')
+
+    return render(request, 'confirm_delete.html', {'artwork': artwork})

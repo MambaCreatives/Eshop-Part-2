@@ -1,67 +1,59 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load cart_tags %}  <!-- Ensure cart_tags is properly loaded -->
+{% load cart_tags %}
 
 {% block title %}My Orders - DigiArt{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="mb-4">My Orders</h2>
-
-    <!-- Debugging: Show number of orders -->
-    <p>Number of orders: {{ orders|length }}</p>
+    <h2 class="mb-4 text-center stylish-title">🎨 My Art Orders</h2>
 
     {% if orders %}
-    <div class="row">
+    <div class="row justify-content-center">
         {% for order in orders %}
-        <div class="col-12 mb-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <span>Order #{{ order.id }}</span>
-                    <span class="badge 
-                        {% if order.status == 'delivered' %}bg-success
-                        {% elif order.status == 'cancelled' %}bg-danger
-                        {% elif order.status == 'processing' %}bg-warning
-                        {% elif order.status == 'shipped' %}bg-info
-                        {% else %}bg-primary{% endif %}">
+        <div class="col-lg-8 col-md-10 mb-4">
+            <div class="order-card">
+                <div class="order-header">
+                    <span class="order-id">Order #{{ order.id }}</span>
+                    <span class="order-status 
+                        {% if order.status == 'delivered' %}status-delivered
+                        {% elif order.status == 'cancelled' %}status-cancelled
+                        {% elif order.status == 'processing' %}status-processing
+                        {% elif order.status == 'shipped' %}status-shipped
+                        {% else %}status-default{% endif %}">
                         {{ order.get_status_display|default:order.status }}
                     </span>
                 </div>
-                <div class="card-body">
-                    <div class="row align-items-center">
+                <div class="order-body">
+                    <div class="row">
                         <!-- Artwork Image -->
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             {% if order.artwork.image %}
                                 <img src="{{ order.artwork.image.url }}" 
-                                     alt="{{ order.artwork.name }}"
-                                     class="img-fluid rounded">
+                                     alt="{{ order.artwork.name }}" class="artwork-image">
                             {% endif %}
                         </div>
                         
                         <!-- Order Details -->
-                        <div class="col-md-7">
-                            <h5 class="mb-1">{{ order.artwork.name }}</h5>
-                            <p class="mb-1">Category: {{ order.artwork.category.name }}</p>
-                            <p class="mb-1">Quantity: {{ order.quantity }}</p>
-                            <p class="mb-0">Price per item: KSH {{ order.price }}</p>
+                        <div class="col-md-6">
+                            <h5 class="art-title">{{ order.artwork.name }}</h5>
+                            <p class="category-badge">{{ order.artwork.category.name }}</p>
+                            <p>Quantity: <strong>{{ order.quantity }}</strong></p>
+                            <p>Price per item: <strong>KSH {{ order.price }}</strong></p>
                         </div>
                         
                         <!-- Order Summary -->
                         <div class="col-md-3 text-end">
-                            <p class="mb-1">
+                            <p class="total-price">
                                 <strong>Total: KSH {{ order.price|multiply:order.quantity }}</strong>
                             </p>
-                            <p class="mb-1">
-                                <small class="text-muted">
-                                    Ordered on {{ order.date|date:"F j, Y" }}
-                                </small>
+                            <p class="order-date">
+                                <small>Ordered on {{ order.date|date:"F j, Y" }}</small>
                             </p>
-                            <p class="mb-2">
-                                <small class="text-muted">
-                                    Delivery to: {{ order.address }}
-                                </small>
+                            <p class="order-address">
+                                <small>Delivery to: {{ order.address }}</small>
                             </p>
-                            <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
+                            <a href="{% url 'order_detail' order.id %}" class="btn btn-art">
                                 View Details
                             </a>
                         </div>
@@ -72,33 +64,121 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+    <div class="empty-orders">
+        <i class="fas fa-box-open empty-icon"></i>
         <h4>No orders yet</h4>
-        <p class="text-muted">Start shopping to see your orders here!</p>
-        <a href="{% url 'homepage' %}" class="btn btn-primary">
-            Browse Artworks
-        </a>
+        <p>Start shopping to see your orders here!</p>
+        <a href="{% url 'homepage' %}" class="btn btn-primary">Browse Artworks</a>
     </div>
     {% endif %}
 </div>
 
 {% block extra_css %}
 <style>
-    .badge {
-        font-size: 0.875rem;
-        padding: 0.5em 1em;
+    /* Artistic Styling */
+    .stylish-title {
+        font-family: 'Brush Script MT', cursive;
+        font-size: 2.5rem;
+        color: #6a0dad;
+        text-shadow: 2px 2px 5px rgba(106, 13, 173, 0.2);
     }
-    .category-badge {
-        font-size: 0.75rem;
+
+    .order-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        transition: transform 0.3s ease-in-out;
     }
-    .card-header {
-        border-bottom: none;
-        background-color: #f8f9fa;
+
+    .order-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-size: 1.2rem;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
     .order-status {
-        width: 100px;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    /* Status Colors */
+    .status-delivered { background: #28a745; color: white; }
+    .status-cancelled { background: #dc3545; color: white; }
+    .status-processing { background: #ffc107; color: black; }
+    .status-shipped { background: #17a2b8; color: white; }
+    .status-default { background: #6c757d; color: white; }
+
+    .order-body {
+        padding-top: 15px;
+    }
+
+    .artwork-image {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .art-title {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .category-badge {
+        background: #6a0dad;
+        color: white;
+        font-size: 0.85rem;
+        padding: 3px 10px;
+        border-radius: 5px;
+        display: inline-block;
+    }
+
+    .total-price {
+        font-size: 1.2rem;
+        color: #28a745;
+    }
+
+    .order-date,
+    .order-address {
+        font-size: 0.85rem;
+        color: #777;
+    }
+
+    .btn-art {
+        background: #6a0dad;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 12px;
+        text-decoration: none;
+        transition: background 0.3s ease-in-out;
+    }
+
+    .btn-art:hover {
+        background: #4e077d;
+    }
+
+    /* Empty Orders */
+    .empty-orders {
         text-align: center;
+        padding: 50px 0;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: #aaa;
+        margin-bottom: 15px;
     }
 </style>
 {% endblock %}

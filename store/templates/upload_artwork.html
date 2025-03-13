@@ -2,51 +2,195 @@
 {% load static %}
 
 {% block content %}
-<div class="container py-5">
-    <h2>Upload Artwork</h2>
+<div class="container py-5 d-flex justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+            <div class="card-header text-center text-white position-relative" style="background: linear-gradient(135deg, #8e44ad, #3498db);">
+                <div class="position-absolute top-0 end-0 opacity-25" style="width: 120px; height: 120px; background: radial-gradient(circle, rgba(255,255,255,0.2) 10%, transparent 70%); transform: translate(30%, -30%);"></div>
+                <h2 class="fw-bold mb-0 display-5" style="font-family: 'Playfair Display', serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                    Create Your Masterpiece
+                </h2>
+                <div class="mt-3 opacity-75">
+                    <i class="fas fa-palette fa-2x"></i>
+                </div>
+            </div>
+            
+            <div class="card-body p-4 p-lg-5">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-dismissible alert-{{ message.tags }} rounded-3 shadow-sm">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
-    <!-- Display Messages (Success/Error) -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <div class="mb-3">
-            <label for="name" class="form-label">Artwork Name</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+                    <!-- Form Fields -->
+                    <div class="mb-4 position-relative">
+                        <label for="name" class="form-label fw-semibold text-purple">Artwork Title</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="fas fa-heading text-purple"></i>
+                            </span>
+                            <input type="text" class="form-control rounded-pill ps-3" id="name" name="name" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-semibold text-purple">Artistic Description</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent align-items-start pt-3">
+                                <i class="fas fa-pen-nib text-purple"></i>
+                            </span>
+                            <textarea class="form-control rounded-4 ps-3" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="price" class="form-label fw-semibold text-purple">Value (KSH)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="fas fa-coins text-purple"></i>
+                            </span>
+                            <input type="number" class="form-control rounded-pill ps-3" id="price" name="price" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="image" class="form-label fw-semibold text-purple">Upload Your Creation</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" class="form-control rounded-pill" id="image" name="image" accept="image/*" required>
+                            <div class="upload-overlay">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                <span>Choose File</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="category" class="form-label fw-semibold text-purple">Art Style</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="fas fa-brush text-purple"></i>
+                            </span>
+                            <select class="form-control rounded-pill ps-3" id="category" name="category">
+                                <option value="">Let AI Decide</option>
+                                <option value="pencil">Pencil Sketch</option>
+                                <option value="painting">Canvas Painting</option>
+                                <option value="thread">Textile Art</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-gradient btn-lg">
+                            <i class="fas fa-magic me-2"></i>Showcase Your Art
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="price" class="form-label">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="image" class="form-label">Upload Image</label>
-            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
-        </div>
-
-        <!-- Category Dropdown (Optional: Leave empty for AI prediction) -->
-        <div class="mb-3">
-            <label for="category" class="form-label">Category (Leave empty for AI prediction)</label>
-            <select class="form-control" id="category" name="category">
-                <option value="">Auto-Detect (AI)</option>
-                <option value="pencil">Pencil Drawing</option>
-                <option value="painting">Painting</option>
-                <option value="thread">Thread Art</option>
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
+    </div>
 </div>
+
+<style>
+    :root {
+        --purple: #8e44ad;
+        --blue: #3498db;
+        --gradient: linear-gradient(135deg, var(--purple), var(--blue));
+    }
+
+    .text-purple { color: var(--purple); }
+
+    .btn-gradient {
+        background: var(--gradient);
+        color: white;
+        border: none;
+        border-radius: 2rem;
+        padding: 1rem 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-gradient:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(120deg,
+            transparent,
+            rgba(255,255,255,0.3),
+            transparent);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(142, 68, 173, 0.3);
+    }
+
+    .btn-gradient:hover:before {
+        left: 100%;
+    }
+
+    .form-control {
+        border: 2px solid #e0e0e0;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+    }
+
+    .file-upload-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 2rem;
+    }
+
+    .upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--purple);
+        pointer-events: none;
+        border: 2px dashed #e0e0e0;
+        border-radius: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:valid + .upload-overlay {
+        border-color: var(--purple);
+        background: rgba(142, 68, 173, 0.05);
+    }
+
+    .input-group-text {
+        border: none;
+        background: transparent !important;
+        padding-left: 1rem;
+    }
+
+    .card-header {
+        padding: 3rem 2rem;
+        border-bottom: 3px solid rgba(255,255,255,0.1);
+    }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 {% endblock %}

@@ -6,65 +6,62 @@
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="mb-4">Shopping Cart</h2>
+    <h2 class="mb-4 text-center fancy-title">🎨 Your Art Cart 🖌️</h2>
 
     {% if cart_items %}
     <div class="row">
         <div class="col-md-8">
             {% for cart_item in cart_items %}
-            <div class="card mb-3">
+            <div class="card cart-card mb-3">
                 <div class="card-body">
                     <div class="row align-items-center">
+                        <!-- Artwork Image -->
                         <div class="col-2">
-                            <!-- Debugging: Show the cart_item dictionary -->
-                            <p>Debug: {{ cart_item }}</p>
-
-                            <!-- Ensure artwork object exists before displaying image -->
-                            {% if cart_item.artwork %}
-                                {% if cart_item.artwork.image %}
-                                    <img src="{{ cart_item.artwork.image.url }}" 
-                                         alt="{{ cart_item.artwork.name }}" 
-                                         class="img-fluid rounded">
-                                {% else %}
-                                    <img src="{% static 'images/default-placeholder.png' %}" 
-                                         alt="Image not available" 
-                                         class="img-fluid rounded">
-                                {% endif %}
+                            {% if cart_item.artwork and cart_item.artwork.image %}
+                                <img src="{{ cart_item.artwork.image.url }}" 
+                                     alt="{{ cart_item.artwork.name }}" 
+                                     class="img-fluid rounded cart-image">
                             {% else %}
-                                <p class="text-danger">Artwork not found</p>
+                                <img src="{% static 'images/default-placeholder.png' %}" 
+                                     alt="Image not available" 
+                                     class="img-fluid rounded cart-image">
                             {% endif %}
                         </div>
 
+                        <!-- Artwork Details -->
                         <div class="col-5">
                             {% if cart_item.artwork %}
-                                <h5 class="mb-1">{{ cart_item.artwork.name }}</h5>
+                                <h5 class="mb-1 text-primary">{{ cart_item.artwork.name }}</h5>
                                 <p class="text-muted mb-1">
-                                    Artist: {{ cart_item.artwork.artist.first_name }} {{ cart_item.artwork.artist.last_name }}
+                                    🎭 Artist: <strong>{{ cart_item.artwork.artist.first_name }} {{ cart_item.artwork.artist.last_name }}</strong>
                                 </p>
-                                <p class="mb-0">Category: {{ cart_item.artwork.get_category_display }}</p>
+                                <p class="mb-0">
+                                    📌 Category: <span class="badge category-badge">{{ cart_item.artwork.get_category_display }}</span>
+                                </p>
                             {% else %}
                                 <p class="text-danger">Artwork details unavailable</p>
                             {% endif %}
                         </div>
 
+                        <!-- Quantity Controls -->
                         <div class="col-3">
-                            <form method="post" class="d-flex align-items-center">
+                            <form method="post" class="d-flex align-items-center justify-content-center">
                                 {% csrf_token %}
                                 <input type="hidden" name="artwork_id" value="{{ cart_item.artwork.id }}">
-                                
-                                <button type="submit" name="action" value="decrease" class="btn btn-outline-secondary btn-sm">-</button>
-                                <span class="mx-2">{{ cart_item.quantity }}</span>
-                                <button type="submit" name="action" value="increase" class="btn btn-outline-secondary btn-sm">+</button>
+                                <button type="submit" name="action" value="decrease" class="btn btn-outline-dark btn-sm">-</button>
+                                <span class="mx-2 fs-5">{{ cart_item.quantity }}</span>
+                                <button type="submit" name="action" value="increase" class="btn btn-outline-dark btn-sm">+</button>
                             </form>
                         </div>
 
+                        <!-- Price and Remove Button -->
                         <div class="col-2 text-end">
-                            <p class="mb-1">KSH {{ cart_item.total }}</p>
+                            <p class="mb-1"><strong>KSH {{ cart_item.total }}</strong></p>
                             <form method="post" action="{% url 'cart' %}" class="d-inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="artwork_id" value="{{ cart_item.artwork.id }}">
                                 <button type="submit" name="action" value="remove" class="btn btn-link text-danger p-0">
-                                    <small>Remove</small>
+                                    <small>🗑 Remove</small>
                                 </button>
                             </form>
                         </div>
@@ -74,29 +71,31 @@
             {% endfor %}
         </div>
 
+        <!-- Order Summary -->
         <div class="col-md-4">
-            <div class="card">
+            <div class="card summary-card">
                 <div class="card-body">
-                    <h5 class="card-title">Order Summary</h5>
+                    <h5 class="card-title text-center">🛍 Order Summary</h5>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal</span>
-                        <span>KSH {{ subtotal }}</span>
+                        <span><strong>KSH {{ subtotal }}</strong></span>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span>Shipping</span>
-                        <span>KSH {{ shipping }}</span>
+                        <span><strong>KSH {{ shipping }}</strong></span>
                     </div>
                     <hr>
-                    <div class="d-flex justify-content-between mb-3">
+                    <div class="d-flex justify-content-between mb-3 total-price">
                         <strong>Total</strong>
                         <strong>KSH {{ total }}</strong>
                     </div>
-                    <a href="{% url 'checkout' %}" class="btn btn-primary w-100">Proceed to Checkout</a>
+                    <a href="{% url 'checkout' %}" class="btn btn-primary w-100 btn-checkout">Proceed to Checkout</a>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
+    <!-- Empty Cart Message -->
     <div class="text-center py-5">
         <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
         <h4>Your cart is empty</h4>
@@ -105,4 +104,77 @@
     </div>
     {% endif %}
 </div>
+
+{% block extra_css %}
+<style>
+    /* Artistic Font */
+    .fancy-title {
+        font-family: 'Pacifico', cursive;
+        color: #ff6f61;
+    }
+
+    /* Artistic background */
+    body {
+        background: url('{% static "images/artistic-background.jpg" %}') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    /* Card Styling */
+    .cart-card {
+        border-left: 8px solid #ff6f61;
+        border-radius: 15px;
+        background: #fffaf0;
+        box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease-in-out;
+    }
+    .cart-card:hover {
+        transform: scale(1.02);
+    }
+
+    /* Summary Card */
+    .summary-card {
+        background: linear-gradient(135deg, #ffe259, #ffa751);
+        border-radius: 15px;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Order Summary */
+    .total-price {
+        font-size: 1.2rem;
+        color: #000;
+    }
+
+    /* Checkout Button */
+    .btn-checkout {
+        background: #ff6f61;
+        border: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: background 0.3s ease;
+    }
+    .btn-checkout:hover {
+        background: #e63e30;
+    }
+
+    /* Category Badge */
+    .category-badge {
+        background: #ff6f61;
+        color: white;
+        border-radius: 5px;
+        padding: 2px 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Image Styling */
+    .cart-image {
+        border-radius: 10px;
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+    .cart-image:hover {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
 {% endblock %}

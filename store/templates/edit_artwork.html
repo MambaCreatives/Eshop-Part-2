@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 d-flex justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-primary text-white text-center rounded-top-4">
+                <h2 class="fw-bold mb-0">Edit Artwork</h2>
+            </div>
+            <div class="card-body bg-light p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Form Fields -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Artwork Name</label>
+                        {{ form.name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        {{ form.category }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Price (KSH)</label>
+                        {{ form.price }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Upload Image</label>
+                        {{ form.image }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
