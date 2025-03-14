@@ -37,7 +37,7 @@ class Customer(models.Model):
     bio = models.TextField(blank=True, null=True)
     artist_statement = models.TextField(blank=True, null=True)
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
-
+  
     def __str__(self):
         return self.user.username
 

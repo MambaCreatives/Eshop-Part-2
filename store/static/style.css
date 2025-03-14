@@ -8,8 +8,8 @@
     --light-color: #f8f9fa;
     --dark-color: #212529;
     --background-color: #f9f9f9;
-    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
+    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease-in-out;
 }
 
 body {
@@ -18,7 +18,7 @@ body {
     padding: 0;
     background-color: var(--background-color);
     color: var(--dark-color);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -33,7 +33,7 @@ a {
 }
 
 a:hover {
-    color: var(--primary-color);
+    color: var(--accent-color);
     text-decoration: underline;
 }
 
@@ -42,10 +42,10 @@ header {
     background-color: var(--dark-color);
     color: white;
     padding: 1rem 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
 }
 
 header .container {
@@ -54,13 +54,8 @@ header .container {
     align-items: center;
 }
 
-.logo {
-    display: flex;
-    align-items: center;
-}
-
 .logo img {
-    height: 40px;
+    height: 45px;
     margin-right: 10px;
 }
 
@@ -85,7 +80,7 @@ nav ul li a {
 
 nav ul li a:hover,
 nav ul li a.active {
-    color: var(--primary-color);
+    color: var(--accent-color);
 }
 
 nav ul li a.active::after {
@@ -95,7 +90,7 @@ nav ul li a.active::after {
     left: 0;
     width: 100%;
     height: 3px;
-    background-color: var(--primary-color);
+    background-color: var(--accent-color);
     border-radius: 3px;
 }
 
@@ -114,14 +109,14 @@ main {
 /* Product grid styles */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
 }
 
 .product-item {
     background-color: white;
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
     box-shadow: var(--card-shadow);
     transition: var(--transition);
@@ -129,13 +124,13 @@ main {
 }
 
 .product-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-7px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .product-item img {
     width: 100%;
-    height: 200px;
+    height: 220px;
     object-fit: cover;
 }
 
@@ -144,21 +139,21 @@ main {
 }
 
 .product-title {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     margin-bottom: 0.5rem;
 }
 
 .product-price {
     color: var(--primary-color);
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 1rem;
 }
 
 .product-category {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
+    padding: 0.35rem 0.7rem;
     border-radius: 20px;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 500;
     margin-bottom: 1rem;
 }
@@ -182,7 +177,7 @@ main {
 .btn {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    border-radius: 5px;
+    border-radius: 6px;
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
@@ -198,344 +193,14 @@ main {
     background-color: #0a58ca;
 }
 
-.btn-outline-primary {
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    background-color: transparent;
-}
-
-.btn-outline-primary:hover {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
-
-/* Form styles */
-.form-control {
-    display: block;
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.form-control:focus {
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-/* Alert styles */
-.alert {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0.25rem;
-    position: relative;
-}
-
-.alert-danger {
-    background-color: #fff5f5;
-    color: #dc3545;
-    border: 1px solid #f5c6cb;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.alert i {
-    margin-right: 0.5rem;
-}
-
-.alert .btn-close {
-    position: absolute;
-    top: 50%;
-    right: 1rem;
-    transform: translateY(-50%);
-}
-
-/* Cart styles */
-.cart-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.cart-item-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-right: 1rem;
-}
-
-.cart-item-details {
-    flex: 1;
-}
-
-.cart-item-quantity {
-    display: flex;
-    align-items: center;
-    margin-top: 0.5rem;
-}
-
-.quantity-btn {
-    background-color: #e9ecef;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.quantity-input {
-    width: 40px;
-    height: 30px;
-    margin: 0 10px;
-    border: 1px solid #ced4da;
-    text-align: center;
-}
-
-/* Order styles */
-.order-history {
-    margin-top: 2rem;
-}
-
-.order-item {
-    display: flex;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-}
-
-.order-product-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-right: 1.5rem;
-}
-
-.order-product-details {
-    flex: 1;
-}
-
-.order-product-name {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.order-product-price {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.order-actions {
-    display: flex;
-    gap: 1rem;
-}
-
-/* Artist profile styles */
-.artist-profile {
-    height: 250px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-}
-
-.artist-profile-placeholder {
-    height: 250px;
-    background-color: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #adb5bd;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-}
-
-.card {
-    transition: transform 0.3s ease-in-out;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: var(--card-shadow);
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-/* Artist gallery styles */
-.artist-header {
-    background-color: var(--light-color);
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-}
-
-.artist-profile-large {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin: 0 auto 1rem;
-    display: block;
-}
-
-.artist-name {
-    text-align: center;
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-}
-
-.artist-location {
-    text-align: center;
-    color: var(--secondary-color);
-    margin-bottom: 1.5rem;
-}
-
-.artist-statement {
-    max-width: 800px;
-    margin: 0 auto 2rem;
-    color: var(--dark-color);
-    font-size: 1.1rem;
-    line-height: 1.7;
-}
-
-.artist-stats {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.stat-label {
-    color: var(--secondary-color);
-    font-size: 0.875rem;
-}
-
-.artist-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-}
-
-/* Footer styles */
-footer {
-    background-color: var(--dark-color);
-    color: white;
-    padding: 2rem 0;
-    margin-top: 4rem;
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
-
-.footer-column h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1.25rem;
-}
-
-.footer-column ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-column ul li {
-    margin-bottom: 0.75rem;
-}
-
-.footer-column ul li a {
-    color: #adb5bd;
-    transition: var(--transition);
-}
-
-.footer-column ul li a:hover {
-    color: white;
-}
-
-.social-icons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.social-icons a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    color: white;
-    transition: var(--transition);
-}
-
-.social-icons a:hover {
-    background-color: var(--primary-color);
-    transform: translateY(-3px);
-}
-
-.footer-bottom {
-    text-align: center;
-    padding-top: 2rem;
-    margin-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
     
     .artist-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
     
     .footer-content {
