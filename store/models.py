@@ -45,7 +45,7 @@ class Customer(models.Model):
   
 class Artwork(models.Model):
     ARTWORK_CATEGORIES = (
-        ('pencil', 'Pencil Drawing'),
+        ('pencil ', 'Pencil Drawing'),
         ('painting', 'Painting'),
         ('thread', 'Thread Art'),
     )

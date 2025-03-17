@@ -524,3 +524,8 @@ def delete_artwork(request, artwork_id):
         return redirect('artist_dashboard')
 
     return render(request, 'confirm_delete.html', {'artwork': artwork})
+
+class ArtworkDetailView(DetailView):
+    model = Artwork
+    template_name = 'artwork_detail.html'  # Ensure this matches the filename
+    context_object_name = 'artwork'

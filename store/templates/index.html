@@ -28,7 +28,7 @@
             {% for category in categories %}
             <a href="{% url 'homepage' %}?category={{ category }}" 
                class="btn btn-outline-primary flex-fill {% if request.GET.category == category %}active{% endif %}">
-                {{ category|title }} Art
+                {{ category|title }} 
             </a>
             {% endfor %}
         </div>

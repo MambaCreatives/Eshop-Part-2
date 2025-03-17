@@ -25,7 +25,7 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('artwork/edit/<int:artwork_id>/', edit_artwork, name='edit_artwork'),
     path('artwork/delete/<int:artwork_id>/', delete_artwork, name='delete_artwork'), 
-    
+        path('artwork/<int:pk>/', ArtworkDetailView.as_view(), name='artwork_detail'),
     # Order paths
     path('order/<int:order_id>/', OrderView.as_view(), name='order_detail'),
     path('orders/', OrderView.as_view(), name='orders'),
