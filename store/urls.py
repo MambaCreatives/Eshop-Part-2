@@ -10,6 +10,7 @@ from .views import ArtworkDetailView
 from .views import Login_view
 from .views import edit_artwork
 from .views import delete_artwork 
+from .views import artist_dashboard,edit_profile
 
 urlpatterns = [ 
     path('', Index.as_view(), name='homepage'), 
@@ -36,7 +37,8 @@ urlpatterns = [
     path('upload/<int:pk>/', UploadArtwork.as_view(), name='upload_artwork'),
     path('artist/<int:artist_id>/', ArtistGallery.as_view(), name='artist_gallery'),
     path('artists/', ArtistGallery.as_view(), name='artists_list'),
-    
+    path('artist/dashboard/', artist_dashboard, name='artist_dashboard'),
+     path('artist/edit-profile/', edit_profile, name='edit_profile'), 
     # Prediction path
     path('upload/', UploadArtwork.as_view(), name='upload_artwork'),
     path('artwork/<int:pk>/', ArtworkDetailView.as_view(), name='artwork_detail'),  # ✅ ADD THIS

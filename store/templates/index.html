@@ -28,7 +28,7 @@
             {% for category in categories %}
             <a href="{% url 'homepage' %}?category={{ category }}" 
                class="btn btn-outline-primary flex-fill {% if request.GET.category == category %}active{% endif %}">
-                {{ category|title }} 
+               {{ category|title }} 
             </a>
             {% endfor %}
         </div>
@@ -90,25 +90,31 @@
 
 <!-- Featured Artists Section -->
 <div class="container py-5">
-    <h2 class="text-center mb-4">Featured Artists</h2>
+    <h2 class="text-center mb-4 fw-bold">🎨 Meet Our Featured Artists</h2>
+    <p class="text-center text-muted mb-5">
+        Explore the creative minds behind these stunning digital artworks.
+    </p>
+
     <div class="row g-4">
         {% for artist in featured_artists %}
         <div class="col-md-4">
-            <div class="card h-100">
-                <img src="{{ artist.profile_image.url }}" class="card-img-top" alt="{{ artist.full_name }}">
-                <div class="card-body text-center">
-                    <h5 class="card-title">{{ artist.full_name }}</h5>
-                    <p class="card-text">{{ artist.bio|truncatewords:20 }}</p>
-                    <a href="{% url 'artist_profile' artist.id %}" class="btn btn-primary">
-                        View Portfolio
-                    </a>
+            <div class="card h-100 border-0 shadow-sm artist-card">
+                <div class="artist-image-container position-relative">
+                    <img src="{{ artist.profile_image.url }}" class="card-img-top artist-image" 
+                         alt="{{ artist.full_name }}">
+                    <div class="artist-overlay">
+                        <h5 class="fw-bold text-white">{{ artist.full_name }}</h5>
+                        <p class="text-white small">{{ artist.bio|truncatewords:15 }}</p>
+                        <a href="{% url 'artist_profile' artist.id %}" class="btn btn-light btn-sm mt-2">
+                            <i class="fas fa-user"></i> View Portfolio
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
-
 <!-- Call to Action -->
 <div class="container py-5 text-center">
     <div class="row align-items-center">

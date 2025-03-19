@@ -30,29 +30,30 @@
     </div>
 
     <!-- Artwork Filter -->
-    <div class="mb-4 text-center">
-        <div class="btn-group" role="group" aria-label="Artwork categories">
-            <button type="button" class="btn btn-outline-dark active" data-filter="all">All</button>
-            <button type="button" class="btn btn-outline-dark" data-filter="pencil">Pencil Drawings</button>
-            <button type="button" class="btn btn-outline-dark" data-filter="painting">Paintings</button>
-            <button type="button" class="btn btn-outline-dark" data-filter="thread">Thread Art</button>
-        </div>
+<div class="mb-4 text-center">
+    <div class="btn-group filter-buttons" role="group" aria-label="Artwork categories">
+        <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="pencil">Pencil Drawings</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="painting">Paintings</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="thread">Thread Art</button>
     </div>
+</div>
 
-    <!-- Artwork Grid -->
+<!-- Artwork Grid -->
 <h3 class="mb-4 text-center fw-bold">Artworks</h3>
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 artwork-grid">
     {% for artwork in artworks %}
-    <div class="col artwork-item" data-category="{{ artwork.category }}">
+    <div class="col artwork-item" data-category="{{ artwork.category|lower|slugify }}">
+
         <div class="card h-100 border-0 shadow-sm">
             <img src="{{ artwork.image.url }}" class="card-img-top rounded" alt="{{ artwork.name }}">
             <div class="card-body">
                 <h5 class="card-title fw-bold">{{ artwork.name }}</h5>
-                <p class="card-text">{{ artwork.description }}</p>
+                <p class="card-text">{{ artwork.description|truncatewords:15 }}</p>
                 <p class="card-text text-muted">
-                    Category: {{ artwork.get_category_display }}
+                    Category: <strong>{{ artwork.get_category_display }}</strong>
                     {% if artwork.ml_category %}
-                    <br>AI Verified as: {{ artwork.ml_category }}
+                    <br>AI Verified as: <strong>{{ artwork.ml_category }}</strong>
                     {% endif %}
                 </p>
                 <p class="card-text fw-bold">Price: KSH {{ artwork.price }}</p>
@@ -75,7 +76,6 @@
                     </form>
                 </div>
                 {% endif %}
-                
             </div>
             <div class="card-footer bg-white text-muted text-center">
                 <small>Posted on {{ artwork.created_at|date:"F j, Y" }}</small>
@@ -89,24 +89,30 @@
     {% endfor %}
 </div>
 
+<!-- JavaScript Fixes -->
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const filterButtons = document.querySelectorAll('[data-filter]');
+    const filterButtons = document.querySelectorAll('.filter-buttons .btn');
     const artworkItems = document.querySelectorAll('.artwork-item');
 
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const filter = this.dataset.filter;
-            
+            const filter = this.dataset.filter.toLowerCase().trim();
+
+            // Remove active class from all buttons & set it on the clicked one
             filterButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            
+
+            // Show/hide artworks based on filter
             artworkItems.forEach(item => {
-                if (filter === 'all' || item.dataset.category === filter) {
-                    item.style.display = 'block';
+                const category = item.dataset.category.toLowerCase().trim();
+                
+                if (filter === 'all' || category === filter) {
+                    item.classList.remove('d-none');  // Show matching items
+                    item.classList.add('fade-in');
                 } else {
-                    item.style.display = 'none';
+                    item.classList.add('d-none');  // Hide non-matching items
                 }
             });
         });
@@ -115,3 +121,22 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% endblock %}
 {% endblock %}
+<!-- Custom Styles -->
+<style>
+    /* Button active state */
+    .filter-buttons .btn.active {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    /* Smooth transition for artworks */
+    .artwork-item {
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+
+    .fade-in {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+</style> 

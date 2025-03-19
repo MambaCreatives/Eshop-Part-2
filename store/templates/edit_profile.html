@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - DigiArt{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-center fw-bold">Edit Your Profile</h2>
+    <p class="text-center text-muted">Update your personal information below.</p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Profile Image -->
+                    <div class="text-center mb-4">
+                        {% if artist.profile_image %}
+                            <img src="{{ artist.profile_image.url }}" alt="Profile Image" class="rounded-circle" width="120">
+                        {% else %}
+                            <img src="{% static 'images/default-profile.png' %}" alt="Default Profile" class="rounded-circle" width="120">
+                        {% endif %}
+                        <input type="file" name="profile_image" class="form-control mt-3">
+                    </div>
+
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" name="first_name" class="form-control" value="{{ artist.first_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" value="{{ artist.last_name }}" required>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ artist.phone }}">
+                    </div>
+
+                    <!-- Bio & Artist Statement -->
+                    <div class="mb-3">
+                        <label class="form-label">Bio</label>
+                        <textarea name="bio" class="form-control" rows="3">{{ artist.bio }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Artist Statement</label>
+                        <textarea name="artist_statement" class="form-control" rows="4">{{ artist.artist_statement }}</textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

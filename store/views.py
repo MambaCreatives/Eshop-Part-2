@@ -529,3 +529,43 @@ class ArtworkDetailView(DetailView):
     model = Artwork
     template_name = 'artwork_detail.html'  # Ensure this matches the filename
     context_object_name = 'artwork'
+@login_required
+def artist_dashboard(request):
+    if request.user.user_type != 'artist':
+        return redirect('homepage')
+
+    artist = request.user
+    artworks = Artwork.objects.filter(artist=artist)
+    total_sales = Order.objects.filter(artwork__artist=artist, status="completed").count()
+    total_revenue = sum(order.artwork.price for order in Order.objects.filter(artwork__artist=artist, status="completed"))
+    orders = Order.objects.filter(artwork__artist=artist).order_by('-created_at')
+
+    context = {
+        'artist': artist,
+        'artworks': artworks,
+        'total_sales': total_sales,
+        'total_revenue': total_revenue,
+        'orders': orders,
+    }
+    return render(request, 'artist_dashboard.html', context)
+login_required
+def edit_profile(request):
+    if request.user.user_type != 'artist':  # Ensure only artists can access
+        return redirect('homepage')
+
+    artist = request.user
+
+    if request.method == 'POST':
+        artist.first_name = request.POST['first_name']
+        artist.last_name = request.POST['last_name']
+        artist.bio = request.POST['bio']
+        artist.artist_statement = request.POST['artist_statement']
+        artist.phone = request.POST['phone']
+        
+        if 'profile_image' in request.FILES:
+            artist.profile_image = request.FILES['profile_image']
+        
+        artist.save()
+        return redirect('artist_dashboard')  # Redirect back to dashboard after saving
+
+    return render(request, 'edit_profile.html', {'artist': artist})

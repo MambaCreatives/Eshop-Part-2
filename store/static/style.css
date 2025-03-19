@@ -1,48 +1,34 @@
-/* Base styles */
+/* ----- Root Variables for a More Artistic Theme ----- */
 :root {
-    --primary-color: #0d6efd;
-    --secondary-color: #6c757d;
-    --accent-color: #ffc107;
+    --primary-color: #6a11cb;
+    --secondary-color: #ffaf7b;
+    --accent-color: #ff4081;
     --danger-color: #dc3545;
-    --success-color: #198754;
+    --success-color: #28a745;
     --light-color: #f8f9fa;
-    --dark-color: #212529;
-    --background-color: #f9f9f9;
-    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    --transition: all 0.3s ease-in-out;
+    --dark-color: #1e1e2e;
+    --background-gradient: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+    --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    --transition: all 0.4s ease-in-out;
 }
 
+/* ----- General Body Styles ----- */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: var(--background-color);
-    color: var(--dark-color);
+    background: var(--background-gradient);
+    color: white;
     line-height: 1.7;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-a {
-    text-decoration: none;
-    color: var(--primary-color);
-    transition: var(--transition);
-}
-
-a:hover {
-    color: var(--accent-color);
-    text-decoration: underline;
-}
-
-/* Header styles */
+/* ----- Header/Navbar Styles ----- */
 header {
-    background-color: var(--dark-color);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
     color: white;
     padding: 1rem 2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--card-shadow);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -54,12 +40,6 @@ header .container {
     align-items: center;
 }
 
-.logo img {
-    height: 45px;
-    margin-right: 10px;
-}
-
-/* Navigation styles */
 nav ul {
     list-style: none;
     margin: 0;
@@ -76,11 +56,12 @@ nav ul li a {
     font-weight: 500;
     padding: 0.5rem 0;
     position: relative;
+    transition: var(--transition);
 }
 
 nav ul li a:hover,
 nav ul li a.active {
-    color: var(--accent-color);
+    color: var(--secondary-color);
 }
 
 nav ul li a.active::after {
@@ -90,23 +71,17 @@ nav ul li a.active::after {
     left: 0;
     width: 100%;
     height: 3px;
-    background-color: var(--accent-color);
+    background-color: var(--secondary-color);
     border-radius: 3px;
 }
 
-/* Main content styles */
+/* ----- Main Content ----- */
 main {
-    padding: 2rem;
+    padding: 3rem;
     min-height: calc(100vh - 200px);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
-
-/* Product grid styles */
+/* ----- Grid Layout for Products/Artworks ----- */
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -114,24 +89,27 @@ main {
     margin-top: 2rem;
 }
 
+/* ----- Artwork Cards ----- */
 .product-item {
-    background-color: white;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--card-shadow);
     transition: var(--transition);
     position: relative;
+    padding-bottom: 15px;
 }
 
 .product-item:hover {
     transform: translateY(-7px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 24px rgba(255, 175, 123, 0.5);
 }
 
 .product-item img {
     width: 100%;
     height: 220px;
     object-fit: cover;
+    border-radius: 12px 12px 0 0;
 }
 
 .product-info {
@@ -140,60 +118,110 @@ main {
 
 .product-title {
     font-size: 1.3rem;
+    font-weight: bold;
     margin-bottom: 0.5rem;
 }
 
 .product-price {
     color: var(--primary-color);
     font-weight: 700;
+    font-size: 1.2rem;
     margin-bottom: 1rem;
 }
 
-.product-category {
+/* ----- Category Badges ----- */
+.category-badge {
     display: inline-block;
-    padding: 0.35rem 0.7rem;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 1rem;
 }
 
 .category-badge.pencil {
-    background-color: #e3f2fd;
-    color: #0d47a1;
+    background: #1a237e;
+    color: #e3f2fd;
 }
 
 .category-badge.painting {
-    background-color: #fce4ec;
-    color: #880e4f;
+    background: #880e4f;
+    color: #fce4ec;
 }
 
 .category-badge.thread {
-    background-color: #f3e5f5;
-    color: #4a148c;
+    background: #4a148c;
+    color: #f3e5f5;
 }
 
-/* Button styles */
+/* ----- Buttons ----- */
 .btn {
     display: inline-block;
     padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 500;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
     border: none;
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #0a58ca;
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+    transform: scale(1.05);
 }
 
-/* Responsive adjustments */
+/* ----- Artist Profile & Gallery ----- */
+.artist-image-container {
+    overflow: hidden;
+    border-radius: 12px;
+    position: relative;
+}
+
+.artist-image {
+    transition: transform 0.3s ease-in-out;
+    border-radius: 12px;
+}
+
+.artist-card:hover .artist-image {
+    transform: scale(1.1);
+}
+
+/* Overlay Effect */
+.artist-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    border-radius: 12px;
+}
+
+.artist-card:hover .artist-overlay {
+    opacity: 1;
+}
+
+/* ----- Footer Styles ----- */
+footer {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* ----- Responsive Design ----- */
 @media (max-width: 768px) {
     .product-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -205,5 +233,136 @@ main {
     
     .footer-content {
         grid-template-columns: 1fr;
+    }
+}
+/* 🌟 Background Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+    color: white;
+}
+
+/* 🌟 Centered Sign-Up Container */
+.container {
+    max-width: 800px;
+}
+
+/* 🌟 Glassmorphism Card Effect */
+.card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+/* 🌟 Card Header */
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 🌟 Form Inputs */
+.form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    transition: 0.3s ease-in-out;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.form-control:focus {
+    border-color: #6a11cb;
+    box-shadow: 0px 0px 12px rgba(106, 17, 203, 0.5);
+}
+
+/* 🌟 Floating Labels */
+.form-floating label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* 🌟 User Type Buttons */
+.btn-check:checked + .btn-outline-primary {
+    background: linear-gradient(135deg, #ffaf7b, #6a11cb);
+    color: white;
+    border-color: #6a11cb;
+    box-shadow: 0px 4px 10px rgba(255, 175, 123, 0.5);
+}
+
+.btn-outline-primary {
+    border-color: white;
+    color: white;
+    transition: 0.3s ease-in-out;
+}
+
+.btn-outline-primary:hover {
+    background: #6a11cb;
+    color: white;
+}
+
+/* 🌟 Submit Button */
+.btn-primary {
+    background: linear-gradient(135deg, #6a11cb, #ffaf7b);
+    border: none;
+    transition: 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 10px 20px rgba(255, 175, 123, 0.3);
+}
+
+/* 🌟 Terms Checkbox */
+.form-check-input {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.form-check-input:checked {
+    background-color: #ffaf7b;
+    border-color: #ffaf7b;
+}
+
+/* 🌟 Alerts (Error Messages) */
+.alert-danger {
+    background: rgba(255, 0, 0, 0.1);
+    color: white;
+    border-radius: 8px;
+    border: none;
+    text-align: center;
+    font-weight: bold;
+    backdrop-filter: blur(8px);
+}
+
+/* 🌟 Artist Fields */
+.artist-fields {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 🌟 Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 🌟 Responsive Adjustments */
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1.5rem;
     }
 }

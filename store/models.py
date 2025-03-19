@@ -45,9 +45,9 @@ class Customer(models.Model):
   
 class Artwork(models.Model):
     ARTWORK_CATEGORIES = (
-        ('pencil ', 'Pencil Drawing'),
-        ('painting', 'Painting'),
-        ('thread', 'Thread Art'),
+        ('Pencil Drawing', 'Pencil Drawing'),
+        ('Paintings', 'Paintings'),
+        ('Thread_Art', 'Thread Art'),
     )
 
     name = models.CharField(max_length=100)
